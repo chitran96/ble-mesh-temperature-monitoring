@@ -75,6 +75,8 @@
 #define BUTTON_NUMBER_GROUP      (3)
 #define RTT_INPUT_POLL_PERIOD_MS (100)
 
+#define GET_TEMP_PERIOD_S        (5)
+
 /*****************************************************************************
  * Static data
  *****************************************************************************/
@@ -97,6 +99,8 @@ static uint16_t m_configured_devices;
 /* Forward declarations */
 static void client_status_cb(const simple_on_off_client_t * p_self, uint8_t curTemp, uint16_t src);
 static void health_event_cb(const health_client_t * p_client, const health_client_evt_t * p_event);
+
+static volatile bool timerFlag = false;
 
 /*****************************************************************************
  * Static functions
@@ -272,20 +276,8 @@ static void client_status_cb(const simple_on_off_client_t * p_self, uint8_t curT
     {
         __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Update temperature %d\n", curTemp);
         hal_led_blink_ms(LEDS_MASK, 100, 6);
+        //TODO: Store in buffer
     }
-
-    /* Set 4th LED on when all servers are on. */
-    /*bool all_servers_on = true;
-    for (uint32_t i = BSP_LED_0; i < BSP_LED_0 + m_configured_devices; ++i)
-    {
-        if (!hal_led_pin_get(i))
-        {
-            all_servers_on = false;
-            break;
-        }
-    }
-
-    hal_led_pin_set(BSP_LED_3, all_servers_on);*/
 }
 
 static void health_event_cb(const health_client_t * p_client, const health_client_evt_t * p_event)
@@ -417,6 +409,49 @@ static void rtt_input_handler(int key)
     }
 }
 
+void init_timer1()
+{
+    NRF_TIMER1->MODE = TIMER_MODE_MODE_Timer;
+    NRF_TIMER1->TASKS_CLEAR = 1;
+    // set prescalar n
+    // f = 16 MHz / 2^(n)
+    uint8_t prescaler = 4; // 1MHz
+    NRF_TIMER1->PRESCALER = prescaler;
+    NRF_TIMER1->BITMODE = TIMER_BITMODE_BITMODE_32Bit;
+
+
+    uint32_t sec = GET_TEMP_PERIOD_S;
+    uint32_t ticks = sec * 1000000; // 1MHz
+
+    // set compare
+    NRF_TIMER1->CC[1] = ticks;
+
+    // enable compare 1
+    NRF_TIMER1->INTENSET =
+        (TIMER_INTENSET_COMPARE1_Enabled << TIMER_INTENSET_COMPARE1_Pos);
+
+    // use the shorts register to clear compare 1
+    NRF_TIMER1->SHORTS = (TIMER_SHORTS_COMPARE1_CLEAR_Enabled <<
+                          TIMER_SHORTS_COMPARE1_CLEAR_Pos);
+
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- -----\n");
+
+    // start timer
+    NRF_TIMER1->TASKS_START = 1;
+}
+
+void TIMER1_IRQHandler()
+{
+    if (NRF_TIMER1->EVENTS_COMPARE[1] &&
+            NRF_TIMER1->INTENSET & TIMER_INTENSET_COMPARE1_Msk) {
+
+        // clear compare register event
+        NRF_TIMER1->EVENTS_COMPARE[1] = 0;
+    }
+
+    timerFlag = !timerFlag ? !timerFlag:timerFlag;
+}
+
 int main(void)
 {
     __LOG_INIT(LOG_SRC_APP | LOG_SRC_ACCESS, LOG_LEVEL_INFO, LOG_CALLBACK_DEFAULT);
@@ -430,9 +465,11 @@ int main(void)
     mesh_core_setup();
     access_setup();
     rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
+    init_timer1();
 
     while (true)
     {
+        //TODO: Handle timerFlag
         (void)sd_app_evt_wait();
     }
 }
