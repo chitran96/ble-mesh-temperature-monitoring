@@ -434,8 +434,6 @@ void init_timer1()
     NRF_TIMER1->SHORTS = (TIMER_SHORTS_COMPARE1_CLEAR_Enabled <<
                           TIMER_SHORTS_COMPARE1_CLEAR_Pos);
 
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- -----\n");
-
     // start timer
     NRF_TIMER1->TASKS_START = 1;
 }
@@ -450,6 +448,8 @@ void TIMER1_IRQHandler()
     }
 
     timerFlag = !timerFlag ? !timerFlag:timerFlag;
+
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, ".\n");
 }
 
 int main(void)

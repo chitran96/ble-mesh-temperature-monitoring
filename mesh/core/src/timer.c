@@ -325,6 +325,7 @@ void timer_on_ts_begin(timestamp_t timeslot_start_time)
     {
 #if !defined(HOST)
         (void) NVIC_EnableIRQ(TIMER0_IRQn);
+        (void) NVIC_EnableIRQ(TIMER1_IRQn);
 #endif
     }
 

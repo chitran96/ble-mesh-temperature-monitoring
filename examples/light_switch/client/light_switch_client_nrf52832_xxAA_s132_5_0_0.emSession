@@ -39,8 +39,8 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="32" y="471" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="1" top="444" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="18" y="325" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../mesh/core/src/timer.c" debugPath="../../../mesh/core/src/timer.c" selected="0" top="312" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="41" y="451" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="0" top="428" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="327" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../mesh/core/src/timer.c" debugPath="../../../mesh/core/src/timer.c" selected="1" top="312" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="light_switch_client_nrf52832_xxAA_s132_5.0.0" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/DELL/Downloads/Compressed/nrf5_SDK_for_Mesh_v0.9.2-Alpha/examples" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>
