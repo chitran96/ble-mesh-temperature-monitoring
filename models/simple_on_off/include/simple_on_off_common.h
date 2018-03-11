@@ -52,6 +52,8 @@
 
 /*lint -align_max(push) -align_max(1) */
 
+#define  ERR_TEMP_CODE                        (0xFF)
+
 /** Simple OnOff opcodes. */
 typedef enum
 {
@@ -78,7 +80,7 @@ typedef struct __attribute((packed))
 /** Message format for the Simple OnOff Status message. */
 typedef struct __attribute((packed))
 {
-    uint8_t present_on_off; /**< Current state. */
+    uint8_t present_temp; /**< Current state. */
 } simple_on_off_msg_status_t;
 
 /*lint -align_max(pop) */

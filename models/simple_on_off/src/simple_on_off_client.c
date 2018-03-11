@@ -75,7 +75,7 @@ static void reliable_status_cb(access_model_handle_t model_handle,
             /* Ignore */
             break;
         case ACCESS_RELIABLE_TRANSFER_TIMEOUT:
-            p_client->status_cb(p_client, SIMPLE_ON_OFF_STATUS_ERROR_NO_REPLY, NRF_MESH_ADDR_UNASSIGNED);
+            p_client->status_cb(p_client, ERR_TEMP_CODE, NRF_MESH_ADDR_UNASSIGNED);
             break;
 
         default:
@@ -141,9 +141,7 @@ static void handle_status_cb(access_model_handle_t handle, const access_message_
 
     simple_on_off_msg_status_t * p_status =
         (simple_on_off_msg_status_t *) p_message->p_data;
-    simple_on_off_status_t on_off_status = (p_status->present_on_off ?
-                                              SIMPLE_ON_OFF_STATUS_ON : SIMPLE_ON_OFF_STATUS_OFF);
-    p_client->status_cb(p_client, on_off_status, p_message->meta_data.src.value);
+    p_client->status_cb(p_client, p_status->present_temp, p_message->meta_data.src.value);
 }
 
 static const access_opcode_handler_t m_opcode_handlers[] =

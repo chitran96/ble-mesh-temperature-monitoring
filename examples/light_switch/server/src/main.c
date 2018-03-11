@@ -73,7 +73,7 @@
 static simple_on_off_server_t m_server;
 
 /* Forward declaration */
-static bool get_cb(const simple_on_off_server_t * p_server);
+static uint8_t get_cb(const simple_on_off_server_t * p_server);
 static bool set_cb(const simple_on_off_server_t * p_server, uint8_t value);
 
 /*****************************************************************************
@@ -101,17 +101,19 @@ static void provisioning_complete(void * p_unused)
  * Simple OnOff Callbacks
  *****************************************************************************/
 
-static bool get_cb(const simple_on_off_server_t * p_server)
+static uint8_t get_cb(const simple_on_off_server_t * p_server)
 {
-    return hal_led_pin_get(LED_PIN_NUMBER);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got GET command\n");
+    //return hal_led_pin_get(LED_PIN_NUMBER);
+    //TODO: Get temperature
+    return 30;
 }
 
 static bool set_cb(const simple_on_off_server_t * p_server, uint8_t value)
 {
-    //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got SET command to %u\n", value);
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got SET char to %d\n", value);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got SET command: value %d\n", value);
     //hal_led_pin_set(LED_PIN_NUMBER, value);
-    return value;
+    //return value;
 }
 
 int main(void)

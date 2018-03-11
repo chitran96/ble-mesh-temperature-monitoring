@@ -54,17 +54,6 @@
 /** Simple OnOff Client model ID. */
 #define SIMPLE_ON_OFF_CLIENT_MODEL_ID (0x0001)
 
-/** Simple OnOff status codes. */
-typedef enum
-{
-    /** Received status ON from the server. */
-    SIMPLE_ON_OFF_STATUS_ON,
-    /** Received status OFF from the server. */
-    SIMPLE_ON_OFF_STATUS_OFF,
-    /** The server did not reply to a Simple OnOff Set/Get. */
-    SIMPLE_ON_OFF_STATUS_ERROR_NO_REPLY
-} simple_on_off_status_t;
-
 /** Forward declaration. */
 typedef struct __simple_on_off_client simple_on_off_client_t;
 
@@ -75,7 +64,7 @@ typedef struct __simple_on_off_client simple_on_off_client_t;
  * @param[in] status The received status of the remote server.
  * @param[in] src    Element address of the remote server.
  */
-typedef void (*simple_on_off_status_cb_t)(const simple_on_off_client_t * p_self, simple_on_off_status_t status, uint16_t src);
+typedef void (*simple_on_off_status_cb_t)(const simple_on_off_client_t * p_self, uint8_t curTemp, uint16_t src);
 
 /** Simple OnOff Client state structure. */
 struct __simple_on_off_client

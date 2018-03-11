@@ -95,7 +95,7 @@ static uint16_t m_provisioned_devices;
 static uint16_t m_configured_devices;
 
 /* Forward declarations */
-static void client_status_cb(const simple_on_off_client_t * p_self, simple_on_off_status_t status, uint16_t src);
+static void client_status_cb(const simple_on_off_client_t * p_self, uint8_t curTemp, uint16_t src);
 static void health_event_cb(const health_client_t * p_client, const health_client_evt_t * p_event);
 
 /*****************************************************************************
@@ -259,30 +259,23 @@ static uint32_t server_index_get(const simple_on_off_client_t * p_client)
     return index;
 }
 
-static void client_status_cb(const simple_on_off_client_t * p_self, simple_on_off_status_t status, uint16_t src)
+static void client_status_cb(const simple_on_off_client_t * p_self, uint8_t curTemp, uint16_t src)
 {
     uint32_t server_index = server_index_get(p_self);
-    switch (status)
+
+    if (curTemp == ERR_TEMP_CODE)
     {
-        case SIMPLE_ON_OFF_STATUS_ON:
-            hal_led_pin_set(BSP_LED_0 + server_index, true);
-            break;
-
-        case SIMPLE_ON_OFF_STATUS_OFF:
-            hal_led_pin_set(BSP_LED_0 + server_index, false);
-            break;
-
-        case SIMPLE_ON_OFF_STATUS_ERROR_NO_REPLY:
-            hal_led_blink_ms(LEDS_MASK, 100, 6);
-            break;
-
-        default:
-            NRF_MESH_ASSERT(false);
-            break;
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Error while updating new temperature\n");
+        hal_led_blink_ms(LEDS_MASK, 1000, 2);
+    }
+    else 
+    {
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Update temperature %d\n", curTemp);
+        hal_led_blink_ms(LEDS_MASK, 100, 6);
     }
 
     /* Set 4th LED on when all servers are on. */
-    bool all_servers_on = true;
+    /*bool all_servers_on = true;
     for (uint32_t i = BSP_LED_0; i < BSP_LED_0 + m_configured_devices; ++i)
     {
         if (!hal_led_pin_get(i))
@@ -292,7 +285,7 @@ static void client_status_cb(const simple_on_off_client_t * p_self, simple_on_of
         }
     }
 
-    hal_led_pin_set(BSP_LED_3, all_servers_on);
+    hal_led_pin_set(BSP_LED_3, all_servers_on);*/
 }
 
 static void health_event_cb(const health_client_t * p_client, const health_client_evt_t * p_event)
@@ -312,7 +305,7 @@ static void health_event_cb(const health_client_t * p_client, const health_clien
 static void button_event_handler(uint32_t button_number)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Button %u pressed\n", button_number);
-    if (m_configured_devices == 0)
+    /*if (m_configured_devices == 0)
     {
         __LOG(LOG_SRC_APP, LOG_LEVEL_WARN, "No devices provisioned\n");
         return;
@@ -321,20 +314,17 @@ static void button_event_handler(uint32_t button_number)
     {
         __LOG(LOG_SRC_APP, LOG_LEVEL_WARN, "Device %u not provisioned yet.\n", button_number);
         return;
-    }
+    }*/
 
     uint32_t status = NRF_SUCCESS;
     switch (button_number)
     {
         case 0:
-        case 1:
-        case 2:
-            /* Invert LED. */
-            //status = simple_on_off_client_set(&m_clients[button_number],
-            //                                  !hal_led_pin_get(BSP_LED_0 + button_number));
-            status = simple_on_off_client_set(&m_clients[button_number],
-                                              'A');
+        case 1: 
+            status = simple_on_off_client_get(&m_clients[0]);
+            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Get data: %d\n", m_clients[0].state.data);
             break;
+        case 2: status = simple_on_off_client_set(&m_clients[0], 'A'); break;
         case 3:
             /* Group message: invert all LEDs. */
             status = simple_on_off_client_set_unreliable(&m_clients[GROUP_CLIENT_INDEX],

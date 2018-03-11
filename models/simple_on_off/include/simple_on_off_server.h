@@ -60,7 +60,7 @@ typedef struct __simple_on_off_server simple_on_off_server_t;
  * @param[in] p_self Pointer to the Simple OnOff Server context structure.
  * @returns @c true if the state is On, @c false otherwise.
  */
-typedef bool (*simple_on_off_get_cb_t)(const simple_on_off_server_t * p_self);
+typedef uint8_t (*simple_on_off_get_cb_t)(const simple_on_off_server_t * p_self);
 
 /**
  * Set callback type.

@@ -50,10 +50,10 @@
 
 static void reply_status(const simple_on_off_server_t * p_server,
                          const access_message_rx_t * p_message,
-                         bool present_on_off)
+                         uint8_t curTemp)
 {
     simple_on_off_msg_status_t status;
-    status.present_on_off = present_on_off ? 1 : 0;
+    status.present_temp = curTemp;
     access_message_tx_t reply;
     reply.opcode.opcode = SIMPLE_ON_OFF_OPCODE_STATUS;
     reply.opcode.company_id = ACCESS_COMPANY_ID_NORDIC;
@@ -67,10 +67,10 @@ static void reply_status(const simple_on_off_server_t * p_server,
  * Opcode handler callbacks
  *****************************************************************************/
 
-static void publish_state(simple_on_off_server_t * p_server, bool value)
+static void publish_state(simple_on_off_server_t * p_server, uint8_t curTemp)
 {
     simple_on_off_msg_status_t status;
-    status.present_on_off = value ? 1 : 0;
+    status.present_temp = curTemp;
     access_message_tx_t msg;
     msg.opcode.opcode = SIMPLE_ON_OFF_OPCODE_STATUS;
     msg.opcode.company_id = ACCESS_COMPANY_ID_NORDIC;
