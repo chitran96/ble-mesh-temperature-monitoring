@@ -99,8 +99,10 @@ static uint16_t m_configured_devices;
 /* Forward declarations */
 static void client_status_cb(const simple_on_off_client_t * p_self, uint8_t curTemp, uint16_t src);
 static void health_event_cb(const health_client_t * p_client, const health_client_evt_t * p_event);
+static void client_get_status_handle(void);
 
 static volatile bool timerFlag = false;
+static volatile bool isGettingData = false;
 
 /*****************************************************************************
  * Static functions
@@ -269,12 +271,12 @@ static void client_status_cb(const simple_on_off_client_t * p_self, uint8_t curT
 
     if (curTemp == ERR_TEMP_CODE)
     {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Error while updating new temperature\n");
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Error while updating new temperature from node %d\n", server_index);
         hal_led_blink_ms(LEDS_MASK, 1000, 2);
     }
     else 
     {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Update temperature %d\n", curTemp);
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Update temperature %d from node %d\n", curTemp, server_index);
         hal_led_blink_ms(LEDS_MASK, 100, 6);
         //TODO: Store in buffer
     }
@@ -294,33 +296,58 @@ static void health_event_cb(const health_client_t * p_client, const health_clien
     }
 }
 
+static void client_get_status_handle()
+{
+    uint8_t i = 0;
+    uint32_t status = NRF_SUCCESS;
+
+    for (i; i < CLIENT_COUNT; i++)
+    {
+      status = simple_on_off_client_get(&m_clients[i]);
+      if (status == NRF_ERROR_INVALID_STATE || status == NRF_ERROR_NO_MEM || status == NRF_ERROR_BUSY)
+      {
+          __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Cannot send. Device is busy.\n");
+          hal_led_blink_ms(LEDS_MASK, 50, 4);
+      }
+      else
+      {
+          ERROR_CHECK(status);
+      }
+    }
+}
+
 static void button_event_handler(uint32_t button_number)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Button %u pressed\n", button_number);
-    /*if (m_configured_devices == 0)
+    if (m_configured_devices == 0)
     {
         __LOG(LOG_SRC_APP, LOG_LEVEL_WARN, "No devices provisioned\n");
         return;
     }
-    else if (m_configured_devices <= button_number && button_number != BUTTON_NUMBER_GROUP)
-    {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_WARN, "Device %u not provisioned yet.\n", button_number);
-        return;
-    }*/
 
     uint32_t status = NRF_SUCCESS;
     switch (button_number)
     {
-        case 0:
-        case 1: 
-            status = simple_on_off_client_get(&m_clients[0]);
-            __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Get data: %d\n", m_clients[0].state.data);
-            break;
-        case 2: status = simple_on_off_client_set(&m_clients[0], 'A'); break;
+        case 0: 
+          timerFlag = false;
+          isGettingData = !isGettingData;
+          if (isGettingData) 
+          {
+            NRF_TIMER1->TASKS_STOP = 0;
+            NRF_TIMER1->TASKS_START = 1; 
+          }
+          else
+          {
+            NRF_TIMER1->TASKS_START = 0;
+            NRF_TIMER1->TASKS_STOP = 1;
+          }
+          break;
+        case 1: break;
+        case 2: /*status = simple_on_off_client_set(&m_clients[0], 'A');*/ break;
         case 3:
             /* Group message: invert all LEDs. */
-            status = simple_on_off_client_set_unreliable(&m_clients[GROUP_CLIENT_INDEX],
-                                                         !hal_led_pin_get(BSP_LED_0 + button_number), 3);
+            /*status = simple_on_off_client_set_unreliable(&m_clients[GROUP_CLIENT_INDEX],
+                                                         !hal_led_pin_get(BSP_LED_0 + button_number), 3);*/
             break;
         default:
             break;
@@ -434,8 +461,6 @@ void init_timer1()
     NRF_TIMER1->SHORTS = (TIMER_SHORTS_COMPARE1_CLEAR_Enabled <<
                           TIMER_SHORTS_COMPARE1_CLEAR_Pos);
 
-    // start timer
-    NRF_TIMER1->TASKS_START = 1;
 }
 
 void TIMER1_IRQHandler()
@@ -447,9 +472,9 @@ void TIMER1_IRQHandler()
         NRF_TIMER1->EVENTS_COMPARE[1] = 0;
     }
 
-    timerFlag = !timerFlag ? !timerFlag:timerFlag;
+    timerFlag = true;
 
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, ".\n");
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Timer event\n");
 }
 
 int main(void)
@@ -469,7 +494,12 @@ int main(void)
 
     while (true)
     {
-        //TODO: Handle timerFlag
-        (void)sd_app_evt_wait();
+        //TODO: Handle timerFlag, isGettingData
+        if (timerFlag)
+        {
+          timerFlag = false;
+          client_get_status_handle();
+        }
+        (void) sd_app_evt_wait();
     }
 }
