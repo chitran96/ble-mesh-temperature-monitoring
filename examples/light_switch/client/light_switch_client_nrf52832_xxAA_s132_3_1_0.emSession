@@ -13,8 +13,10 @@
  <Project>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0"/>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0"/>
-  <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Access"/>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Application"/>
+  <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Application;lib"/>
+  <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;nRF Drivers"/>
+  <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;nRF Libraries"/>
  </Project>
  <Register1/>
  <Register2/>
@@ -24,7 +26,9 @@
   <Trace enabled="Yes"/>
  </TraceWindow>
  <Watch1>
-  <Watches active="1" update="Never"/>
+  <Watches active="1" update="Never">
+   <Watchpoint numelements="0" expression="UART_CONFIG_HWFC_Enabled" evalMode="0" name="UART_CONFIG_HWFC_Enabled" radix="16" linenumber="515" filename="src/main.c" list=""/>
+  </Watches>
  </Watch1>
  <Watch2>
   <Watches active="0" update="Never"/>
@@ -36,9 +40,9 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="51" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="1" top="44" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="30" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../mesh/serial/src/serial_bearer.c" debugPath="../../../mesh/serial/src/serial_bearer.c" selected="0" top="6" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../mesh/access/src/access.c" debugPath="../../../mesh/access/src/access.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="21" y="527" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="1" top="517" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="41" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart/app_uart_fifo.c" debugPath="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart/app_uart_fifo.c" selected="0" top="23" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="236" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart/app_uart.h" debugPath="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart/app_uart.h" selected="0" top="215" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="light_switch_client_nrf52832_xxAA_s132_3.1.0" fileDialogDefaultFilter="" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/DELL/Desktop/ble-mesh-temperature-monitoring/mesh/serial/src" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="light_switch_client_nrf52832_xxAA_s132_3.1.0" fileDialogDefaultFilter="" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/DELL/Desktop/ble-mesh-temperature-monitoring/external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/common" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>

@@ -66,6 +66,8 @@
 #include "light_switch_example_common.h"
 #include "rtt_input.h"
 
+#include "app_uart.h"
+
 /*****************************************************************************
  * Definitions
  *****************************************************************************/
@@ -476,6 +478,14 @@ void TIMER1_IRQHandler()
 
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Timer event\n");
 }
+void uart_error_handle(app_uart_evt_t * p_event){
+      //if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR){
+          //APP_ERROR_HANDLER(p_event->data.error_communication);
+      //}
+      //else if (p_event->evt_type == APP_UART_FIFO_ERROR){
+          //APP_ERROR_HANDLER(p_event->data.error_code);
+      //}
+}
 
 int main(void)
 {
@@ -492,8 +502,35 @@ int main(void)
     //rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
     init_timer1();
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");
+    
+#define UART_TX_BUF_SIZE 256                         /**< UART TX buffer size. */
+#define UART_RX_BUF_SIZE 256                         /**< UART RX buffer size. */
+    
+	uint8_t rx_buf[UART_RX_BUF_SIZE];
+	uint8_t tx_buf[UART_TX_BUF_SIZE];
 
-
+    app_uart_buffers_t buffers;
+    app_uart_comm_params_t  comm_params;
+    uint32_t                res; 
+    comm_params.baud_rate    = UART_BAUDRATE_BAUDRATE_Baud115200;
+    comm_params.rx_pin_no    = RX_PIN_NUMBER; 
+    comm_params.tx_pin_no    = TX_PIN_NUMBER;
+    comm_params.rts_pin_no   = RTS_PIN_NUMBER;
+    comm_params.cts_pin_no   = CTS_PIN_NUMBER;
+    comm_params.flow_control = APP_UART_FLOW_CONTROL_DISABLED;
+    comm_params.use_parity   = false;
+    buffers.rx_buf           = rx_buf;                                                              
+    buffers.rx_buf_size      = sizeof(rx_buf);                                                     
+    buffers.tx_buf           = tx_buf;                                                              
+    buffers.tx_buf_size      = sizeof(tx_buf); 
+  
+    // init uart
+    app_uart_close();
+    res = app_uart_init(&comm_params, &buffers, uart_error_handle, APP_IRQ_PRIORITY_LOWEST);
+	
+    if (res == NRF_SUCCESS){
+      __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- Good uart! -------\n");
+    }
     while (true)
     {
         //TODO: Handle timerFlag, isGettingData
@@ -502,6 +539,7 @@ int main(void)
           timerFlag = false;
           client_get_status_handle();
         }
+        app_uart_put('a');
         (void) sd_app_evt_wait();
     }
 }

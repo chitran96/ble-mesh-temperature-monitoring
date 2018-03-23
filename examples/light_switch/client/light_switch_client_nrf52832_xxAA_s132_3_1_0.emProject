@@ -39,6 +39,7 @@
       <file file_name="../../common/src/rtt_input.c" />
       <file file_name="../../common/src/simple_hal.c" />
       <file file_name="../../nrf_mesh_weak.c" />
+      <folder Name="lib" />
     </folder>
     <folder Name="Core">
       <file file_name="../../../mesh/core/src/internal_event.c" />
@@ -141,7 +142,15 @@
     </folder>
     <configuration
       Name="Debug"
-      c_user_include_directories="../../../mesh/serial/include;../../../mesh/serial/api" />
+      c_user_include_directories="../lib;../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart;../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/fifo;../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/common;../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/uart" />
+    <folder Name="nRF Libraries">
+      <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart/app_uart_fifo.c" />
+      <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/fifo/app_fifo.c" />
+    </folder>
+    <folder Name="nRF Drivers">
+      <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/uart/nrf_drv_uart.c" />
+      <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/common/nrf_drv_common.c" />
+    </folder>
   </project>
   <configuration
     Name="Debug"
