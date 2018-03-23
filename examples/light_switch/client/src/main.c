@@ -223,7 +223,7 @@ static void access_setup(void)
         ERROR_CHECK(dsm_subnet_add(0, m_netkey, &m_netkey_handle));
         ERROR_CHECK(dsm_appkey_add(0, m_netkey_handle, m_appkey, &m_appkey_handle));
     }
-
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang 0\n");
     if (access_flash_config_load())
     {
         m_configured_devices = configured_devices_count_get();
@@ -231,8 +231,11 @@ static void access_setup(void)
     else
     {
         /* Bind the keys to the health client. */
-        ERROR_CHECK(access_model_application_bind(m_health_client.model_handle, m_appkey_handle));
+        //ERROR_CHECK();
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "return code %d\n", access_model_application_bind(m_health_client.model_handle, m_appkey_handle));
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang -1\n");
         ERROR_CHECK(access_model_publish_application_set(m_health_client.model_handle, m_appkey_handle));
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang -2\n");
 
         /* Bind the keys to the Simple OnOff clients. */
         for (uint32_t i = 0; i < SERVER_COUNT; ++i)
@@ -246,11 +249,12 @@ static void access_setup(void)
         ERROR_CHECK(access_model_publish_address_set(m_clients[GROUP_CLIENT_INDEX].model_handle, m_group_handle));
         access_flash_config_store();
     }
-
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang 1\n");
     provisioner_init();
     if (m_configured_devices < m_provisioned_devices)
     {
         provisioner_configure(UNPROV_START_ADDRESS + m_configured_devices);
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang 2\n");
     }
     else if (m_provisioned_devices < SERVER_COUNT)
     {
@@ -309,10 +313,6 @@ static void client_get_status_handle()
           __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Cannot send. Device is busy.\n");
           hal_led_blink_ms(LEDS_MASK, 50, 4);
       }
-      else
-      {
-          ERROR_CHECK(status);
-      }
     }
 }
 
@@ -358,7 +358,7 @@ static void button_event_handler(uint32_t button_number)
         status == NRF_ERROR_NO_MEM ||
         status == NRF_ERROR_BUSY)
     {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Cannot send. Device is busy.\n");
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Cannot send. Device is busy or offline.\n");
         hal_led_blink_ms(LEDS_MASK, 50, 4);
     }
     else
@@ -489,8 +489,10 @@ int main(void)
     hal_led_pin_set(BSP_LED_0, true);
     mesh_core_setup();
     access_setup();
-    rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
+    //rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
     init_timer1();
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");
+
 
     while (true)
     {

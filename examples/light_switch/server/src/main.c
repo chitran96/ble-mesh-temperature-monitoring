@@ -94,7 +94,7 @@ static void provisioning_complete(void * p_unused)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Successfully provisioned\n");
     hal_led_mask_set(LEDS_MASK, false);
-    hal_led_blink_ms(LED_PIN_MASK, 200, 4);
+    hal_led_pin_set(LED_PIN_NUMBER, true);
 }
 
 /*****************************************************************************
@@ -140,8 +140,10 @@ int main(void)
     config_params.lf_clk_cfg.source = NRF_CLOCK_LF_SRC_XTAL;
     config_params.lf_clk_cfg.xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM;
 #endif
-
+    //hal_led_pin_set(LED_1, 1);
+    //hal_led_pin_set(LED_2, 1);
     ERROR_CHECK(nrf_mesh_node_config(&config_params));
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");
 
     while (true)
     {
