@@ -81,6 +81,8 @@
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/simple_on_off_client.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/app_uart_fifo.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/app_fifo.o"
+"build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/app_timer.o"
+"build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/app_util_platform.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/nrf_drv_uart.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/nrf_drv_common.o"
 "C:/Program Files/SEGGER/SEGGER Embedded Studio 3.28/lib/libdebugio_mempoll_v7em_fpv4_sp_d16_hard_t_le_eabi.a"

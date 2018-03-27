@@ -142,10 +142,12 @@
     </folder>
     <configuration
       Name="Debug"
-      c_user_include_directories="../lib;../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart;../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/fifo;../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/common;../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/uart" />
+      c_user_include_directories="../lib;../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart;../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/fifo;../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/timer;../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/common;../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/uart" />
     <folder Name="nRF Libraries">
       <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/uart/app_uart_fifo.c" />
       <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/fifo/app_fifo.c" />
+      <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/timer/app_timer.c" />
+      <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/util/app_util_platform.c" />
     </folder>
     <folder Name="nRF Drivers">
       <file file_name="../../../external/nRF5_SDK_14.2.0_17b948a/components/drivers_nrf/uart/nrf_drv_uart.c" />

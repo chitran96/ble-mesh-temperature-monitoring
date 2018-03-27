@@ -41,7 +41,7 @@
 
 #ifdef SOFTDEVICE_PRESENT
 /* Global nvic state instance, required by nrf_nvic.h */
-nrf_nvic_state_t nrf_nvic_state;
+//nrf_nvic_state_t nrf_nvic_state;
 #endif
 
 static uint32_t m_in_critical_region = 0;
