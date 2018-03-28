@@ -39,7 +39,10 @@
       <file file_name="../../common/src/rtt_input.c" />
       <file file_name="../../common/src/simple_hal.c" />
       <file file_name="../../nrf_mesh_weak.c" />
-      <folder Name="lib" />
+      <folder Name="lib">
+        <file file_name="../lib/at_low_c.c" />
+        <file file_name="../lib/systmr.c" />
+      </folder>
     </folder>
     <folder Name="Core">
       <file file_name="../../../mesh/core/src/internal_event.c" />

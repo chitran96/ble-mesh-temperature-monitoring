@@ -13,6 +13,7 @@
  <Project>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0"/>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0"/>
+  <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Access"/>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Application"/>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Application;lib"/>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;nRF Drivers"/>
@@ -40,8 +41,9 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="64" y="497" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="0" top="481" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="43" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/util/app_util_platform.c" debugPath="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/util/app_util_platform.c" selected="1" top="28" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="33" y="475" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="0" top="458" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_low_c.c" debugPath="../lib/at_low_c.c" selected="0" top="43" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="28" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_low_c.h" debugPath="../lib/at_low_c.h" selected="1" top="14" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="light_switch_client_nrf52832_xxAA_s132_3.1.0" fileDialogDefaultFilter="" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/DELL/Desktop/ble-mesh-temperature-monitoring/external/nRF5_SDK_14.2.0_17b948a/components/libraries/util" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="light_switch_client_nrf52832_xxAA_s132_3.1.0" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/DELL/Desktop/ble-mesh-temperature-monitoring/examples/light_switch/lib" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

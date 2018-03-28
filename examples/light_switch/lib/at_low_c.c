@@ -7,15 +7,13 @@
  @author Bui Van Hieu <vanhieubk@gmail.com>
 */
 #include "at_low_c.h"
-#include "board_config.h"
-#include "nrf_uart.h"
-#include "nrf_delay.h"
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-extern "C"{
-void uart_error_handle(app_uart_evt_t * p_event);
-} /* end extern c */
+char*    spResp;
+app_uart_buffers_t buffers;
+uint16_t sMaxRespLength;
+uint8_t rx_buf[UART_RX_BUF_SIZE];
+uint8_t tx_buf[UART_TX_BUF_SIZE];
 
 static char CRLF[] = "\r\n";
 static const char EQUAL_SYMB = '=';
@@ -29,8 +27,7 @@ static const char QUOTE_SYMB = '\"';
 	@brief flush RX buffer
 	@return none
 */
-void at_low_c::FlushRxBuf(void){
-  nrf_delay_ms(30);		//WHY NEED DELAY HERE ???
+void ATLOW_FlushRxBuf(void){
 	uint8_t c;
 	while (app_uart_get(&c) == NRF_SUCCESS);
 };
@@ -49,24 +46,24 @@ void at_low_c::FlushRxBuf(void){
   @attention peripheralIndex is not used in this Nordic implementation. The pResp has to be pointed to a 
              static buffer and keepr remain for future communication
 */
-bool at_low_c::Reinit(uint8_t peripheralIndex, uint32_t baudRate, bool isFlowControl, char* pResp, int16_t maxResp){
+bool ATLOW_Reinit(uint8_t peripheralIndex, uint32_t baudRate, bool isFlowControl, char* pResp, int16_t maxResp){
   app_uart_comm_params_t  comm_params;
   uint32_t                res;
   
   (void) peripheralIndex; //to remove warning
   //set uart parameters
   switch (baudRate){
-    case 9600:   comm_params.baud_rate = NRF_UART_BAUDRATE_9600;   break;
-    case 19200:  comm_params.baud_rate = NRF_UART_BAUDRATE_19200;  break;
-    case 38400:  comm_params.baud_rate = NRF_UART_BAUDRATE_38400;  break;
-    case 57600:  comm_params.baud_rate = NRF_UART_BAUDRATE_57600;  break;
-    case 115200: comm_params.baud_rate = NRF_UART_BAUDRATE_115200; break;
+    case 9600:   comm_params.baud_rate = UART_BAUDRATE_BAUDRATE_Baud9600;   break;
+    case 19200:  comm_params.baud_rate = UART_BAUDRATE_BAUDRATE_Baud19200;  break;
+    case 38400:  comm_params.baud_rate = UART_BAUDRATE_BAUDRATE_Baud38400;  break;
+    case 57600:  comm_params.baud_rate = UART_BAUDRATE_BAUDRATE_Baud57600;  break;
+    case 115200: comm_params.baud_rate = UART_BAUDRATE_BAUDRATE_Baud115200; break;
     default: return false;
   }
-  comm_params.rx_pin_no    = BOARD_UART_RX_PIN; 
-  comm_params.tx_pin_no    = BOARD_UART_TX_PIN;
-  comm_params.rts_pin_no   = BOARD_UART_RTS_PIN;
-  comm_params.cts_pin_no   = BOARD_UART_CTS_PIN;
+  comm_params.rx_pin_no    = RX_PIN_NUMBER; 
+  comm_params.tx_pin_no    = TX_PIN_NUMBER;
+  comm_params.rts_pin_no   = RTS_PIN_NUMBER;
+  comm_params.cts_pin_no   = CTS_PIN_NUMBER;
   comm_params.flow_control = (isFlowControl) ? APP_UART_FLOW_CONTROL_ENABLED : APP_UART_FLOW_CONTROL_DISABLED;
   comm_params.use_parity   = false;
   buffers.rx_buf           = rx_buf;                                                              
@@ -94,8 +91,7 @@ bool at_low_c::Reinit(uint8_t peripheralIndex, uint32_t baudRate, bool isFlowCon
 	@param[in] sendChar Character to send
 	@return TRUE done success
 */
-bool at_low_c::SendChar(char sendChar){
-  LOG_PutChar(sendChar);
+bool ATLOW_SendChar(char sendChar){
   return (app_uart_put(sendChar) == NRF_SUCCESS);
 };
 
@@ -107,12 +103,11 @@ bool at_low_c::SendChar(char sendChar){
   @param[in] size size of string
 	@return TRUE done success
 */
-bool at_low_c::SendStr(char* pSendStr){
+bool ATLOW_SendStr(char* pSendStr){
 	while (*pSendStr != '\0'){
 		if (app_uart_put(*pSendStr) != NRF_SUCCESS){
 			return false;
     }
-    LOG_PutChar(*pSendStr);
     pSendStr++;
 	}
 	return true;
@@ -125,7 +120,7 @@ bool at_low_c::SendStr(char* pSendStr){
 	@param[in] sendNum Number to send
 	@return TRUE done success
 */
-bool at_low_c::SendNum(uint32_t sendNum){
+bool ATLOW_SendNum(uint32_t sendNum){
 	char strOfNum[12];
 	sprintf(strOfNum, "%u", sendNum);
 	return SendStr(strOfNum);
@@ -138,7 +133,7 @@ bool at_low_c::SendNum(uint32_t sendNum){
 	@param[in] sendNum Number to send
 	@return TRUE done success
 */
-bool at_low_c::SendNum(int32_t sendNum){
+bool ATLOW_SendNum(int32_t sendNum){
 	char strOfNum[12];
 	sprintf(strOfNum, "%d", sendNum);
 	return SendStr(strOfNum);
@@ -152,27 +147,26 @@ bool at_low_c::SendNum(int32_t sendNum){
 	@param[out] pResp The full received response. If pResp is NULL then use the buffer set in Reinit
 	@return TRUE done success
 */
-bool at_low_c::Wait(uint32_t waitTime, char* pResp){
+bool ATLOW_Wait(uint32_t waitTime, char* pResp){
 	bool      firstRecv;
 	uint16_t  numReceivedByte = 0;
   uint8_t*  pRecvChar;
-  poll_timeout_c timeOutWaitResp(waitTime);
-	poll_timeout_c timeOutWaitByte(TIMEOUT_INCOMING_BYTE * 1000);
+  uint32_t  baseWaitTime = SYSTMR_Second();
+  uint32_t  baseWaitByte = SYSTMR_Second();
   
   pRecvChar = (pResp) ? ((uint8_t*) pResp) : ((uint8_t*) spResp);
   
   firstRecv = false;
-  while (! timeOutWaitResp.IsTimeOut()){
+  while (SYSTMR_Second() - baseWaitTime < waitTime){
 		if (firstRecv){
-			if (timeOutWaitByte.IsTimeOut()){
+			if (SYSTMR_Second() - baseWaitByte > TIMEOUT_INCOMING_BYTE * 1000) {
 				*pRecvChar = '\0';
-        LOG_Printf("%s", pResp);
 				return true;
 			}
 		}
     while (app_uart_get(pRecvChar) == NRF_SUCCESS){
 			firstRecv = true;
-			timeOutWaitByte.Reinit(TIMEOUT_INCOMING_BYTE * 1000);
+			baseWaitByte = SYSTMR_Second();
       if (numReceivedByte >= sMaxRespLength - 1){
         *pRecvChar = '\0';
         return false;
@@ -184,7 +178,6 @@ bool at_low_c::Wait(uint32_t waitTime, char* pResp){
     }
   }
   *pRecvChar = '\0';
-  LOG_Printf("%s", pResp);
 	return true;
 };
 
@@ -197,26 +190,26 @@ bool at_low_c::Wait(uint32_t waitTime, char* pResp){
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
   bool            firstRecv = false;
 	uint16_t         numReceivedByte = 0;
   uint8_t*        pRecvChar;
   uint16_t         waitStrLen;
-  poll_timeout_c  timeOutWaitResp(timeOut);
-	poll_timeout_c  timeOutWaitByte(TIMEOUT_INCOMING_BYTE * 1000);
+  uint32_t        baseWaitTime = SYSTMR_Second();
+  uint32_t        baseWaitByte = SYSTMR_Second();
   
   pRecvChar  = (pResp) ? ((uint8_t*) pResp) : ((uint8_t*) spResp);
   waitStrLen = strlen(pWaitStr);
-  while (! timeOutWaitResp.IsTimeOut()){
+  while (SYSTMR_Second() - baseWaitTime < timeOut){
 		if (firstRecv){
-			if (timeOutWaitByte.IsTimeOut()){
+			if (SYSTMR_Second() - baseWaitByte > TIMEOUT_INCOMING_BYTE * 1000) {
 				*pRecvChar = '\0';
 				return false;
 			}
 		}
     while (app_uart_get(pRecvChar) == NRF_SUCCESS){
 			firstRecv = true;
-			timeOutWaitByte.Reinit(TIMEOUT_INCOMING_BYTE * 1000);
+			baseWaitByte = SYSTMR_Second();
       if (numReceivedByte >= sMaxRespLength - 1){ //buffer overflow
         *pRecvChar = '\0';
         return false;
@@ -227,7 +220,6 @@ bool at_low_c::Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
         *pRecvChar = '\0'; //add end string
         if (numReceivedByte >= waitStrLen){
           if (!strncmp(pResp + numReceivedByte - waitStrLen, pWaitStr, waitStrLen)) { //detect waitString
-            LOG_Printf("%s", pResp);
             return true;
           }
         }
@@ -236,7 +228,6 @@ bool at_low_c::Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
   } //end while
   
   *pRecvChar = '\0';
-  LOG_Printf("%s", pResp);
 	return false; //timeOut
 };
 
@@ -249,7 +240,7 @@ bool at_low_c::Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-/*bool at_low_c::SendAndWait(char* pSendStr, uint32_t waitTime, char* pResp)
+/*bool ATLOW_SendAndWait(char* pSendStr, uint32_t waitTime, char* pResp)
 {
   FlushRxBuf();
 	if (SendStr(pSendStr))
@@ -272,7 +263,7 @@ bool at_low_c::Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendAndWait(char* pSendStr, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendAndWait(char* pSendStr, uint32_t timeOut, char* pWaitStr, char* pResp){
   FlushRxBuf();
 	if (SendStr(pSendStr)){
     if (pWaitStr == NULL){
@@ -298,7 +289,7 @@ bool at_low_c::SendAndWait(char* pSendStr, uint32_t timeOut, char* pWaitStr, cha
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, uint32_t timeOut, char* pWaitStr, char* pResp){
   SendStr(pCmd);
 	return SendAndWait(CRLF, timeOut, pWaitStr, pResp);
 };
@@ -314,7 +305,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, uint32_t timeOut, char* pWaitStr, 
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
 	SendStr(pCmd);
   SendChar(EQUAL_SYMB);
   SendNum(firstNumPara);
@@ -333,7 +324,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, uint32_t tim
   @param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, char* pFirstStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){ 
+bool ATLOW_SendCommandAndWait(char* pCmd, char* pFirstStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){ 
   SendStr(pCmd);
   SendChar(EQUAL_SYMB);
  
@@ -356,7 +347,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, char* pFirstStrPara, uint32_t time
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
 	SendStr(pCmd);
   SendChar(EQUAL_SYMB);
   
@@ -379,7 +370,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t seco
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, char* pSecondStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, char* pSecondStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
 	SendStr(pCmd);
   SendChar(EQUAL_SYMB);
   
@@ -405,7 +396,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, char* pSecon
   @param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, char* pFirstStrPara, int32_t secondNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, char* pFirstStrPara, int32_t secondNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
 	SendStr(pCmd);
   SendChar(EQUAL_SYMB);
   
@@ -431,7 +422,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, char* pFirstStrPara, int32_t secon
   @param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, char* pFirstStrPara, char* pSecondStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, char* pFirstStrPara, char* pSecondStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
 	SendStr(pCmd);
   SendChar(EQUAL_SYMB);
   
@@ -459,7 +450,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, char* pFirstStrPara, char* pSecond
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, int32_t thirdNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, int32_t thirdNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
   SendStr(pCmd);
   SendChar(EQUAL_SYMB);
 
@@ -487,7 +478,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t seco
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, char* pThirdStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, char* pThirdStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
 	SendStr(pCmd);
   SendChar(EQUAL_SYMB);
   
@@ -517,7 +508,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t seco
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, char* pSecondStrPara, int32_t thirdNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
+bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, char* pSecondStrPara, int32_t thirdNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
 	SendStr(pCmd);
   SendChar(EQUAL_SYMB);
   
@@ -548,7 +539,7 @@ bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, char* pSecon
 	@param[out] pResp The full received response
 	@return TRUE done success
 */
-bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, char* pThirdStrPara, char* pFourthStrPara, uint32_t timeOut, char* pWaitStr, char* pResp)
+bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, char* pThirdStrPara, char* pFourthStrPara, uint32_t timeOut, char* pWaitStr, char* pResp)
 {
 	SendStr(pCmd);
   SendChar(EQUAL_SYMB);
@@ -572,25 +563,11 @@ bool at_low_c::SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t seco
 };
 
 
-
-
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-//********************************************************************
-/**
-	@brief dummy callback
-	@return none
-*/
-extern "C"{
-  void uart_error_handle(app_uart_evt_t * p_event){
-      //if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR){
-          //APP_ERROR_HANDLER(p_event->data.error_communication);
-      //}
-      //else if (p_event->evt_type == APP_UART_FIFO_ERROR){
-          //APP_ERROR_HANDLER(p_event->data.error_code);
-      //}
-  }
-} /* end extern "C" */
+void uart_error_handle(app_uart_evt_t * p_event){
+    //if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR){
+        //APP_ERROR_HANDLER(p_event->data.error_communication);
+    //}
+    //else if (p_event->evt_type == APP_UART_FIFO_ERROR){
+        //APP_ERROR_HANDLER(p_event->data.error_code);
+    //}
+}
