@@ -28,7 +28,7 @@
  </TraceWindow>
  <Watch1>
   <Watches active="1" update="Never">
-   <Watchpoint numelements="0" expression="UART_CONFIG_HWFC_Enabled" evalMode="0" name="UART_CONFIG_HWFC_Enabled" radix="16" linenumber="533" filename="src/main.c" list=""/>
+   <Watchpoint numelements="0" expression="UART_CONFIG_HWFC_Enabled" evalMode="0" name="UART_CONFIG_HWFC_Enabled" radix="16" linenumber="519" filename="src/main.c" list=""/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -41,9 +41,7 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="33" y="475" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="0" top="458" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_low_c.c" debugPath="../lib/at_low_c.c" selected="0" top="43" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="28" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_low_c.h" debugPath="../lib/at_low_c.h" selected="1" top="14" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="17" y="484" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="1" top="461" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="light_switch_client_nrf52832_xxAA_s132_3.1.0" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/DELL/Desktop/ble-mesh-temperature-monitoring/examples/light_switch/lib" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

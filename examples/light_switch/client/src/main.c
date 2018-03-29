@@ -69,6 +69,8 @@
 #include "app_timer.h"
 #include "app_uart.h"
 
+#include "at_low_c.h"
+
 /*****************************************************************************
  * Definitions
  *****************************************************************************/
@@ -449,6 +451,8 @@ void _APP_OnGenTimeout(void *p_context) {
 };
 
 int main(void) {
+  uint32_t res;
+
   __LOG_INIT(LOG_SRC_APP | LOG_SRC_ACCESS, LOG_LEVEL_INFO, LOG_CALLBACK_DEFAULT);
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- BLE Mesh Light Switch Client Demo -----\n");
 
@@ -461,36 +465,10 @@ int main(void) {
   access_setup();
   //rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
   init_timer1();
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");
-
-#define UART_TX_BUF_SIZE 256 /**< UART TX buffer size. */
-#define UART_RX_BUF_SIZE 256 /**< UART RX buffer size. */
-
-  uint8_t rx_buf[UART_RX_BUF_SIZE];
-  uint8_t tx_buf[UART_TX_BUF_SIZE];
-
-  app_uart_buffers_t buffers;
-  app_uart_comm_params_t comm_params;
-  uint32_t res;
-  comm_params.baud_rate = UART_BAUDRATE_BAUDRATE_Baud115200;
-  comm_params.rx_pin_no = RX_PIN_NUMBER;
-  comm_params.tx_pin_no = TX_PIN_NUMBER;
-  comm_params.rts_pin_no = RTS_PIN_NUMBER;
-  comm_params.cts_pin_no = CTS_PIN_NUMBER;
-  comm_params.flow_control = APP_UART_FLOW_CONTROL_DISABLED;
-  comm_params.use_parity = false;
-  buffers.rx_buf = rx_buf;
-  buffers.rx_buf_size = sizeof(rx_buf);
-  buffers.tx_buf = tx_buf;
-  buffers.tx_buf_size = sizeof(tx_buf);
+  
 
   // init uart
-  app_uart_close();
-  res = app_uart_init(&comm_params, &buffers, uart_error_handle, APP_IRQ_PRIORITY_LOWEST);
 
-  if (res == NRF_SUCCESS) {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- Good uart! -------\n");
-  }
 
   APP_TIMER_DEF(appGenTimeout);
   res = app_timer_init();
@@ -501,13 +479,21 @@ int main(void) {
   }
     
   _APP_StartTimer(appGenTimeout, 5000);
+
+  char buffer[200];
+
+  if (!ATLOW_Reinit(115200, true, buffer, 150))
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "UART failed\n");
+  }
+
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");
   while (true) {
     //TODO: Handle timerFlag, isGettingData
     if (timerFlag) {
       timerFlag = false;
       client_get_status_handle();
     }
-    app_uart_put('a');
     (void)sd_app_evt_wait();
   }
 }

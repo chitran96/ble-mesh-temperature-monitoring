@@ -20,6 +20,7 @@ static const char EQUAL_SYMB = '=';
 static const char COMMA_SYMB = ',';
 static const char QUOTE_SYMB = '\"';
 
+static void uart_error_handle(app_uart_evt_t * p_event);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //********************************************************************
@@ -43,14 +44,11 @@ void ATLOW_FlushRxBuf(void){
   @param[in] pResp Pointer to buffer to store response for future communication
 	@param[in] maxResp Maximum response lenght
 	@return TRUE done success
-  @attention peripheralIndex is not used in this Nordic implementation. The pResp has to be pointed to a 
-             static buffer and keepr remain for future communication
 */
-bool ATLOW_Reinit(uint8_t peripheralIndex, uint32_t baudRate, bool isFlowControl, char* pResp, int16_t maxResp){
+bool ATLOW_Reinit(uint32_t baudRate, bool isFlowControl, char* pResp, int16_t maxResp){
   app_uart_comm_params_t  comm_params;
   uint32_t                res;
-  
-  (void) peripheralIndex; //to remove warning
+
   //set uart parameters
   switch (baudRate){
     case 9600:   comm_params.baud_rate = UART_BAUDRATE_BAUDRATE_Baud9600;   break;
@@ -126,20 +124,6 @@ bool ATLOW_SendNum(uint32_t sendNum){
 	return SendStr(strOfNum);
 };
 
-
-//********************************************************************
-/**
-	@brief Send a signed number
-	@param[in] sendNum Number to send
-	@return TRUE done success
-*/
-bool ATLOW_SendNum(int32_t sendNum){
-	char strOfNum[12];
-	sprintf(strOfNum, "%d", sendNum);
-	return SendStr(strOfNum);
-};
-
-
 //********************************************************************
 /**	
 	@brief Receive response while waiting timeOut
@@ -147,7 +131,7 @@ bool ATLOW_SendNum(int32_t sendNum){
 	@param[out] pResp The full received response. If pResp is NULL then use the buffer set in Reinit
 	@return TRUE done success
 */
-bool ATLOW_Wait(uint32_t waitTime, char* pResp){
+bool ATLOW_WaitNoExpect(uint32_t waitTime, char* pResp){
 	bool      firstRecv;
 	uint16_t  numReceivedByte = 0;
   uint8_t*  pRecvChar;
@@ -231,29 +215,6 @@ bool ATLOW_Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
 	return false; //timeOut
 };
 
-
-//********************************************************************
-/**
-	@brief Send a string then receive response while waiting timeOut
-	@param[in] pSendStr String to send
-	@param[in] waitTime Waiting time to receive the response. The unit is mili second
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-/*bool ATLOW_SendAndWait(char* pSendStr, uint32_t waitTime, char* pResp)
-{
-  FlushRxBuf();
-	if (SendStr(pSendStr))
-  {
-		return Wait(waitTime, pResp);
-  }
-  else{
-    *pResp = '\0';
-    return false;
-  }
-}; */
-
-
 //********************************************************************
 /**
 	@brief Send a string then wait for expected response
@@ -264,304 +225,15 @@ bool ATLOW_Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
 	@return TRUE done success
 */
 bool ATLOW_SendAndWait(char* pSendStr, uint32_t timeOut, char* pWaitStr, char* pResp){
-  FlushRxBuf();
-	if (SendStr(pSendStr)){
-    if (pWaitStr == NULL){
-      return Wait(timeOut, pResp);
-    }
-    else{
-      return Wait(timeOut, pWaitStr, pResp);
-    }
+  ATLOW_FlushRxBuf();
+  if (ATLOW_SendStr(pSendStr)){
+      return ATLOW_Wait(timeOut, pWaitStr, pResp);
   }
   else{
      *pResp = '\0';
     return false;
   }
 };
-
-
-//********************************************************************
-/**
-	@brief Send a command then receive response while waiting timeOut
-	@param[in] pCmd String to send
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-  @param[in] pWaitStr String to wait for
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, uint32_t timeOut, char* pWaitStr, char* pResp){
-  SendStr(pCmd);
-	return SendAndWait(CRLF, timeOut, pWaitStr, pResp);
-};
-
-
-//********************************************************************
-/**
-	@brief Send AT command with one number parameter then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] firstNumPara number as AT command parameter
-  @param[in] pWaitStr String to wait for
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
-	SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-  SendNum(firstNumPara);
-  
-	return SendAndWait(CRLF, timeOut, pWaitStr,  pResp);
-};
-
-
-//********************************************************************
-/**
-	@brief Send AT command with one string parameter then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] pFirstStrPara string as AT command parameter
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[in] pWaitStr String to wait for
-  @param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, char* pFirstStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){ 
-  SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
- 
-  SendChar(QUOTE_SYMB);
-  SendStr(pFirstStrPara);
-  SendChar(QUOTE_SYMB);
-  
-	return SendAndWait(CRLF, timeOut, pWaitStr, pResp);
-};
-
-
-//********************************************************************
-/**
-	@brief Send AT command with two number parameters then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] firstNumPara number as AT command first parameter
-  @param[in] secondNumPara number as AT command second parameter
-  @param[in] pWaitStr String to wait for
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
-	SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-  
-  SendNum(firstNumPara);
-  SendChar(COMMA_SYMB);
-  SendNum(secondNumPara);
-  
-	return SendAndWait(CRLF, timeOut, pWaitStr,  pResp);
-};
-
-
-//********************************************************************
-/**
-	@brief Send AT command with one number and one string parameters then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] firstNumPara number as AT command first parameter
-  @param[in] pSecondStrPara string as AT command second parameter
-  @param[in] pWaitStr String to wait for
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, char* pSecondStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
-	SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-  
-  SendNum(firstNumPara);
-  
-  SendChar(COMMA_SYMB);
-  SendChar(QUOTE_SYMB);
-  SendStr(pSecondStrPara);
-  SendChar(QUOTE_SYMB);
-  
-	return SendAndWait(CRLF, timeOut, pWaitStr,  pResp);
-};
-
-
-//********************************************************************
-/**
-	@brief Send AT command with one string and one number parameters then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] pFirstStrPara string as AT command first parameter
-  @param[in] secondNumPara number as AT command second parameter
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[in] pWaitStr String to wait for
-  @param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, char* pFirstStrPara, int32_t secondNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
-	SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-  
-  SendChar(QUOTE_SYMB);
-  SendStr(pFirstStrPara);
-  SendChar(QUOTE_SYMB);
-  
-  SendChar(COMMA_SYMB);
-  SendNum(secondNumPara);
-	return SendAndWait(CRLF, timeOut, pWaitStr, pResp);
-};
-
-
-
-//********************************************************************
-/**
-	@brief Send AT command with two string parameters then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] pFirstStrPara string as AT command first parameter
-  @param[in] pSecondStrPara string as AT command second parameter
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[in] pWaitStr String to wait for
-  @param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, char* pFirstStrPara, char* pSecondStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
-	SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-  
-  SendChar(QUOTE_SYMB);
-  SendStr(pFirstStrPara);
-  SendChar(QUOTE_SYMB);
-  
-  SendChar(COMMA_SYMB);
-  SendChar(QUOTE_SYMB);
-  SendStr(pSecondStrPara);
-  SendChar(QUOTE_SYMB);
-  
-	return SendAndWait(CRLF, timeOut, pWaitStr, pResp);
-};
-
-//********************************************************************
-/**
-	@brief Send AT command with three number parameters then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] firstNumPara number as AT command first parameter
-  @param[in] secondNumPara number as AT command second parameter
-	@param[in] thirdNumPara number as AT command third parameter
-  @param[in] timeOut Waiting timeOut. The unit is mili second
-  @param[in] pWaitStr String to wait for
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, int32_t thirdNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
-  SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-
-  SendNum(firstNumPara);
-
-  SendChar(COMMA_SYMB);
-  SendNum(secondNumPara);
-
-  SendChar(COMMA_SYMB);
-  SendNum(thirdNumPara); 
-
-  return SendAndWait(CRLF, timeOut, pWaitStr,  pResp);
-}
-
-
-//********************************************************************
-/**
-	@brief Send AT command then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] firstNumPara number as AT command first parameter
-  @param[in] secondNumPara number as AT command second parameter
-	@param[in] pThirdStrPara string as AT command third parameter
-  @param[in] pWaitStr String to wait for
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, char* pThirdStrPara, uint32_t timeOut, char* pWaitStr, char* pResp){
-	SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-  
-  SendNum(firstNumPara);
-  
-  SendChar(COMMA_SYMB);
-  SendNum(secondNumPara);
-	
-  SendChar(COMMA_SYMB);
-	SendChar(QUOTE_SYMB);
-  SendStr(pThirdStrPara);
-  SendChar(QUOTE_SYMB);
-  
-	return SendAndWait(CRLF, timeOut, pWaitStr,  pResp);
-};
-
-
-//********************************************************************
-/**
-	@brief Send AT command then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] firstNumPara number as AT command first parameter
-  @param[in] pSecondStrPara string as AT command second parameter
-	@param[in] thirdNumPara number as AT command third parameter
-  @param[in] pWaitStr String to wait for
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, char* pSecondStrPara, int32_t thirdNumPara, uint32_t timeOut, char* pWaitStr, char* pResp){
-	SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-  
-  SendNum(firstNumPara);
-  
-  SendChar(COMMA_SYMB);
-  SendChar(QUOTE_SYMB);
-  SendStr(pSecondStrPara);
-  SendChar(QUOTE_SYMB);
-  
-	SendChar(COMMA_SYMB);
-	SendNum(thirdNumPara);
-  
-	return SendAndWait(CRLF, timeOut, pWaitStr,  pResp);
-};
-
-
-//********************************************************************
-/**
-	@brief Send AT command then wait for expected response
-	@param[in] pCmd AT command
-  @param[in] firstNumPara number as AT command first parameter
-  @param[in] secondNumPara number as AT command second parameter
-	@param[in] pThirdStrPara string as AT command third parameter
-	@param[in] pFourthStrPara string as AT command fourth parameter
-  @param[in] pWaitStr String to wait for
-	@param[in] timeOut Waiting timeOut. The unit is mili second
-	@param[out] pResp The full received response
-	@return TRUE done success
-*/
-bool ATLOW_SendCommandAndWait(char* pCmd, int32_t firstNumPara, int32_t secondNumPara, char* pThirdStrPara, char* pFourthStrPara, uint32_t timeOut, char* pWaitStr, char* pResp)
-{
-	SendStr(pCmd);
-  SendChar(EQUAL_SYMB);
-  
-  SendNum(firstNumPara);
-  SendChar(COMMA_SYMB);
-	
-  SendNum(secondNumPara);
-	SendChar(COMMA_SYMB);
-	
-	SendChar(QUOTE_SYMB);
-  SendStr(pThirdStrPara);
-  SendChar(QUOTE_SYMB);
-	SendChar(COMMA_SYMB);
-	
-	SendChar(QUOTE_SYMB);
-  SendStr(pFourthStrPara);
-  SendChar(QUOTE_SYMB);
-  
-	return SendAndWait(CRLF, timeOut, pWaitStr,  pResp);
-};
-
 
 void uart_error_handle(app_uart_evt_t * p_event){
     //if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR){
