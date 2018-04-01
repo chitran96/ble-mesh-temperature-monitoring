@@ -70,6 +70,8 @@
 #include "app_uart.h"
 
 #include "at_low_c.h"
+#include "at_ublox_c.h"
+#include "at_mobile_c.h"
 
 /*****************************************************************************
  * Definitions
@@ -482,9 +484,44 @@ int main(void) {
 
   char buffer[200];
 
-  if (!ATLOW_Reinit(115200, true, buffer, 150))
-  {
+  if (!ATLOW_Reinit(115200, true, buffer, 150)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "UART failed\n");
+  }
+
+  if (!ATLOW_SendAndWait("AT\r\n", 2000, "OK\r\n", buffer))
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Ping failed resp %s\n", buffer);
+  }
+  else
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got resp %s\n", buffer);
+  }
+
+  if (!ATLOW_SendAndWait("AT+CSQ\r\n", 2000, "OK\r\n", buffer))
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Ping failed resp %s\n", buffer);
+  }
+  else
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got resp %s\n", buffer);
+  }
+
+  if (!ATMOBILE_MOBIReinit(buffer))
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init failed resp %s\n", buffer);
+  }
+  else
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init success\n");
+  }
+
+  if (!ATMOBILE_TurnOnGPRSAndPDP(buffer))
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn internet on failed resp %s\n", buffer);
+  }
+  else
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn internet on success resp %s\n", buffer);
   }
 
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");

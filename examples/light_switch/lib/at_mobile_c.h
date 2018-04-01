@@ -1,18 +1,16 @@
 /**
- @file at_mobile_c.h
- @version 1.0
- @date 2017-12-14
- @brief Define API to control a mobile module which supports AT command
- @attention The maximum length of the command line is 1024 characters
- @author Bui Van Hieu <vanhieubk@gmail.com>
+@file at_mobile_c.h
+@version 1.0
+@date 2017-12-14
+@brief Define API to control a mobile module which supports AT command
+@attention The maximum length of the command line is 1024 characters
+@author Bui Van Hieu <vanhieubk@gmail.com>
 */
 
 #ifndef __AT_MOBILE_C_H
 #define __AT_MOBILE_C_H
 
 #include "at_ublox_c.h"
-#include "poll_timeout_c.h"
-#include "arduino_port.h"
 
 #define MAX_IMEI_LENGTH						      (32u)
 #define MAX_IMSI_LENGTH						      (32u)
@@ -70,56 +68,35 @@
 
 
 typedef enum{
-  ULOC_TYPE_GNSS=0,
-  ULOC_TYPE_CELLLOCATE
+ULOC_TYPE_GNSS=0,
+ULOC_TYPE_CELLLOCATE
 } uloc_type_t;
 
 
-class at_mobile_c: public at_ublox_c {
+void ATMOBILE_Init(void);
 
-private:
-    /* some functions more here ... */
-	char      sIMEI[MAX_IMEI_LENGTH];
-	char      sIMSI[MAX_IMSI_LENGTH];
-	char      sSIMID[MAX_SIMID_LENGTH];
+bool ATMOBILE_SetReadPeriod(uint32_t newPeriod);
+uint32_t ATMOBILE_GetReadPeriod(void);
 
-	char      sGPRSAPN[MAX_APN_LENGTH];
-	char      sGPRSUsername[MAX_USERNAME_LENGTH];
-	char      sGPRSPassword[MAX_PASSWORD_LENGTH];
+bool ATMOBILE_MOBIReinit(char* pLastResp);
+bool ATMOBILE_MOBIReadIdentify(char* pLastResp);
+bool ATMOBILE_MOBIRegisterNetwork(char* pLastResp);
+bool ATMOBILE_MOBIDeRegisterNetwork(char* pLastResp);
+bool ATMOBILE_MOBIWaitRegisterNetwork(char* pLastResp);
+bool ATMOBILE_MOBISMSReinit(char* pLastResp);
 
-  char      sServerDomain[MAX_DOMAIN_LENGTH];
-  uint32_t  sServerPort;
-	char      _uri[MAX_URI_LENGTH];
-	
-	uint32_t  readPeriod;
+bool ATMOBILE_ReadSMS(bool* pHasSms, int32_t* pSMSIndex, char* pSentNum, char* pContent, char* pLastResp);
+bool ATMOBILE_DeleteAllSMS(char* pLastResp);
 
-public:
-	/* revised */ at_mobile_c(void);
-	
-	bool SetReadPeriod(uint32_t newPeriod);
-	uint32_t GetReadPeriod(void);
+void ATMOBILE_SetRemoteServer(char* pIP, uint32_t port);
+bool ATMOBILE_TurnOnGPRSAndPDP(char* pResp);
+bool ATMOBILE_TurnOffGPRSAndPDP(char* pResp);
+bool ATMOBILE_UploadData(char* pSendData, char* pServerResponse, char* pResp);
 
-	/* revised */ bool MOBIReinit(char* pLastResp);
-	/* revised */ bool MOBIReadIdentify(char* pLastResp);
-	/* revised */ bool MOBIRegisterNetwork(char* pLastResp);
-  bool MOBIDeRegisterNetwork(char* pLastResp);
-  bool MOBIWaitRegisterNetwork(char* pLastResp);
-	/* revised */ bool MOBISMSReinit(char* pLastResp);
-
-  bool ReadSMS(bool* pHasSms, int32_t* pSMSIndex, char* pSentNum, char* pContent, char* pLastResp);
-  bool DeleteAllSMS(char* pLastResp);
-
-  void SetRemoteServer(char* pIP, uint32_t port);
-  /* revised */ bool TurnOnGPRSAndPDP(char* pResp);
-	/* revised */ bool TurnOffGPRSAndPDP(char* pResp);
-	/* revised */ bool UploadData(uloc_type_t ulocType, char* pSendData, char* pServerResponse, char* pResp);
-
-	bool InitGNSSParameters(bool forNMEA, char* pLastResp);
-	bool TurnOnGNSSModule(char* pResp);
-	bool TurnOffGNSSModule(char* pResp);
-	bool ReadNMEAData(char* pNMEAData, char* pLastResp);
-}; /* end class */
+bool ATMOBILE_InitGNSSParameters(bool forNMEA, char* pLastResp);
+bool ATMOBILE_TurnOnGNSSModule(char* pResp);
+bool ATMOBILE_TurnOffGNSSModule(char* pResp);
+bool ATMOBILE_ReadNMEAData(char* pNMEAData, char* pLastResp);
 
 
 #endif /*  __AT_UBLOX_C_H */
-

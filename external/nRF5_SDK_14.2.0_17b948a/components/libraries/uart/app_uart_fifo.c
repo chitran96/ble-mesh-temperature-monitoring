@@ -210,7 +210,7 @@ uint32_t app_uart_get(uint8_t * p_byte)
         uint32_t uart_err_code = nrf_drv_uart_rx(&app_uart_inst, rx_buffer, 1);
 
         // RX resume should never fail.
-        APP_ERROR_CHECK(uart_err_code);
+        //APP_ERROR_CHECK(uart_err_code);
     }
 
     return err_code;

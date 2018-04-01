@@ -7,6 +7,8 @@
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/nrf_mesh_weak.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/at_low_c.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/systmr.o"
+"build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/at_ublox_c.o"
+"build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/at_mobile_c.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/internal_event.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/nrf_mesh_configure.o"
 "build/light_switch_client_nrf52832_xxAA_s132_3.1.0_Debug/obj/aes.o"

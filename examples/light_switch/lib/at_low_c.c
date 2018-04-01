@@ -121,7 +121,7 @@ bool ATLOW_SendStr(char* pSendStr){
 bool ATLOW_SendNum(uint32_t sendNum){
 	char strOfNum[12];
 	sprintf(strOfNum, "%u", sendNum);
-	return SendStr(strOfNum);
+	return ATLOW_SendStr(strOfNum);
 };
 
 //********************************************************************
@@ -227,7 +227,7 @@ bool ATLOW_Wait(uint32_t timeOut, char* pWaitStr, char* pResp){
 bool ATLOW_SendAndWait(char* pSendStr, uint32_t timeOut, char* pWaitStr, char* pResp){
   ATLOW_FlushRxBuf();
   if (ATLOW_SendStr(pSendStr)){
-      return ATLOW_Wait(timeOut, pWaitStr, pResp);
+    return ATLOW_Wait(timeOut, pWaitStr, pResp);
   }
   else{
      *pResp = '\0';

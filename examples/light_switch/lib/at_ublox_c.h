@@ -11,6 +11,7 @@
 #define __AT_UBLOX_C_H
 
 #include "at_low_c.h"
+#include <string.h>
 
 #define NUM_SUPPORT_AT_CMD			(47)
 #define MAX_MSG_LENGTH					(400)
@@ -80,113 +81,95 @@ typedef struct {
 	uint32_t timeout;
 } at_cmd_info_t;
 
+/* general commands */
+bool ATUBLOX_PingTest(char* pResp);
+bool ATUBLOX_SetEcho(bool isEnable, char* pResp);
+bool ATUBLOX_ReadFirmware(char* pFirmVer, char* pResp);
+bool ATUBLOX_ReadIMEI(char* pIMEI, char* pResp);
+bool ATUBLOX_ReadIMSI(char* pIMSI, char* pResp);
+bool ATUBLOX_ReadSIMID(char* pSIMID, char* pResp);
+bool SetPowerMode(uint8_t powerMode, int32_t awakeTime, char* pResp);
+bool SwitchOff(char* pResp);
 
-class at_ublox_c: public at_low_c{
+bool ATUBLOX_SetOperator(uint8_t mode, char* pResp);
+bool ATUBLOX_ReadNetworkRegistrationStatus(uint8_t* stt, char* pResp);
+bool ATUBLOX_ReadNetworkOperator(char* pInfo, char* pResp);
 
-public:
-  /* general commands */
-  /* revised */ bool PingTest(char* pResp);
-  /* revised */ bool SetEcho(bool isEnable, char* pResp);
-  /* DUMMY implementation */ bool ReadFirmware(char* pFirmVer, char* pResp);
-  /* revised */ bool ReadIMEI(char* pIMEI, char* pResp);
-  /* revised */ bool ReadIMSI(char* pIMSI, char* pResp);
-  /* revised */ bool ReadSIMID(char* pSIMID, char* pResp);
-  bool SetPowerMode(uint8_t powerMode, int32_t awakeTime, char* pResp);
-  bool SwitchOff(char* pResp);
+/* SMS commands ..... */
+bool ATUBLOX_SMSSetTextMode(bool isEnable, char* pResp);
+bool ATUBLOX_SMSSetShowHeader(bool isEnable, char* pResp);
+bool ATUBLOX_SMSSelectService(bool isPhase2Plus, char* pResp);
+bool ATUBLOX_SMSSetNewIndication(uint32_t indicateMode, char* pResp);
+bool ATUBLOX_SMSSetWaitingIndicaition(bool isEnable, char* pResp);
+bool ATUBLOX_SMSSetPreferredStorage(bool onSIM, char* pResp);
+bool ATUBLOX_SMSSaveSetting(char* pResp);
+bool ATUBLOX_SMSReadAt(uint8_t index, char* pSentNum, char* pContent, char* pResp);
 
-	/* revised */ bool SetOperator(uint8_t mode, char* pResp);
-  /* revised */ bool ReadNetworkRegistrationStatus(uint8_t* stt, char* pResp);
-	/* revised */ bool ReadNetworkOperator(char* pInfo, char* pResp);
-	/* test function, isn't used in app */ bool TestATCommand(char* cmd, char* pResp);
+bool ATUBLOX_SMSReadOldest(bool* hasSms, int32_t* pIndex, char* pSentNum, char* pContent, char* pResp);
 
-	/* SMS commands ..... */
-	/* revised */ bool SMSSetTextMode(bool isEnable, char* pResp);
-	/* revised */ bool SMSSetShowHeader(bool isEnable, char* pResp);
-	/* revised */ bool SMSSelectService(bool isPhase2Plus, char* pResp);
-	/* revised */ bool SMSSetNewIndication(uint32_t indicateMode, char* pResp);
-bool SMSSetWaitingIndicaition(bool isEnable, char* pResp);
-	/* revised */ bool SMSSetPreferredStorage(bool onSIM, char* pResp);
-  bool SMSSaveSetting(char* pResp);
-  /* revised */  bool SMSReadAt(uint8_t index, char* pSentNum, char* pContent, char* pResp);
+bool ATUBLOX_SMSDeleteAt(int32_t index, char* pResp);
+bool ATUBLOX_SMSDeleteAll(bool includeUnread, char* pResp);
 
-  //bool SMSReadNewest(char* pSentNum, char* pContent, char* pResp);
-	bool SMSReadOldest(bool* hasSms, int32_t* pIndex, char* pSentNum, char* pContent, char* pResp);
-  
-	/* revised */ bool SMSDeleteAt(int32_t index, char* pResp);
-  /* revised */ bool SMSDeleteAll(bool includeUnread, char* pResp);
-  //bool SMSDeleteNewest(char* pResp);
-	//bool SMSDeleteOldest(char* pResp);
+/* GPIO commands */
+bool ATUBLOX_GPIOSetMode(uint16_t pinIndex, uint16_t pinMode, char* pResp);
+bool ATUBLOX_GPIORead(uint16_t pinIndex, bool* pReadVal, char* pResp);
+bool ATUBLOX_GPIOSet(uint16_t pinIndex, bool setVal, char* pResp);
 
-  /* GPIO commands */
-  bool GPIOSetMode(uint16_t pinIndex, uint16_t pinMode, char* pResp);
-  bool GPIORead(uint16_t pinIndex, bool* pReadVal, char* pResp);
-  bool GPIOSet(uint16_t pinIndex, bool setVal, char* pResp);
-  
-  /* DNS commands */
-  bool DNSResolveURL(char* pURL, char* pResolvedIP, char* pResp);
-  bool DNSSetDynamicUpdate(bool isEnable, char* pResp);
-	
-	/* GPRS commands */
-	/* revised */ bool GPRSSetAttach(bool isAttach, char* pResp);
-  /* revised */ bool GPRSIsAttach(bool* pResult, char* pResp);
-	
-	/* revised */ bool GPRSSetAuthentication(uint8_t profileId, uint8_t type, char* pResp);
-	/* revised */ bool GPRSSetAPN(uint8_t profileId, char* pAPN, char* pResp);
-	/* revised */ bool GPRSSetUsername(uint8_t profileId, char* pUserName, char* pResp);
-	/* revised */ bool GPRSSetPassword(uint8_t profileId, char* pPassword, char* pResp);
-  
-  
-	/* WHY need 180s timeout??? */ bool GPRSSetPDP(uint8_t profileId, bool isActive, char* pResp);
-	
-  /* not used TCP relate command yet. not tested */
-  //bool GPRSNewSocket(int8_t* socketID, char* pResp);
-	//bool GPRSConnectTCP(uint8_t socketId, char* domain, uint16_t remotePort, char* pResp);
-	//bool GPRSCloseTCP(uint8_t socketId, char* pResp);
-	//bool GPRSSendData(uint8_t socketId, char* data, uint16_t dataLength, char* pResp);
-	
-	/* HTTP commands */
-	/* revised */ bool HTTPResetParameters(uint8_t httpID, char* pResp);
-	/* revised */ bool HTTPSetDomain(uint8_t httpID, char* domain, char* pResp);
-	/* revised */ bool HTTPSetRemotePort(uint8_t httpID, uint32_t port, char* pResp);
-	/* revised */ bool HTTPSetUsername(uint8_t httpID, char* pUsername, char* pResp);
-	/* revised */ bool HTTPSetPassword(uint8_t httpID, char* pPassword, char* pResp);
-	/* revised */ bool HTTPSetAuthentication(uint8_t httpID, bool isEnable, char* pResp);
-	/* revised */ bool HTTPSetCustomHeader(uint8_t httpID, uint8_t headerIdx, char* headerName, char* headerVal, char* pResp);
-	/* revised */ bool HTTPGetRequest(uint8_t httpID, char* pUri, char* pSaveFileName, bool* pResult, char* pResp); 
-	/* dummy implement. need change later */ bool HTTPParseResponse(char* fileName, char* pResp);
-	
-	/* Flash commmands */
-	/* revised */ bool FlashReadFile(char* fileName, char* pResp);
-	/* revised */ bool FlashDelFile(char* fileName, char* pResp);
-  
-  /* GNSS commands */
-  bool GNSSSetPower(bool isOn, uint8_t aidMode, uint32_t GNSSSystem, char* pResp);
-	bool GNSSSetURC(bool isEnable, char* pResp);
-	bool GNSSSetProfile(uint32_t code, char* pResp);
-	bool GNSSSetSensor(void);
-	bool GNSSConfigData(uint8_t sensor, uint8_t responseType, uint32_t timeout, uint16_t accuracy, char* pResp);
-	bool GNSSSetFixData(bool isEnable, char* pResp);
-	bool GNSSGetFixData(char* pResp);
-	bool GNSSSetGeoPos(bool isEnable, char* pResp);
-	bool GNSSGetGeoPos(char* pResp);
-	bool GNSSSetNumOfSatellites(bool isEnable, char* pResp);
-	bool GNSSGetNumOfSatellites(char* pResp);
-	bool GNSSSetRMC(bool isEnable, char* pResp);
-	bool GNSSGetRMC(char* pResp);
-	bool GNSSSetVTG(bool isEnable, char* pResp);
-	bool GNSSGetVTG(char* pResp);
-	bool GNSSSetSatelliteInfo(bool isEnable, char* pResp);
-	bool GNSSGetSatelliteInfo(char* pResp);
-  
-  bool GNSSGetULOCData(bool byGNSS, uint32_t timeOutInSec, uint32_t accuracyInMet, char* pData, char* pResp);
-  
-  /* general read commands */
-  bool Read(at_ublox_cmd_t readPara, uint32_t timeOut, char* pResp);
-  bool Read(at_ublox_cmd_t readPara, char* pWait, uint32_t timeOut, char* pResp);
-  
-  bool Read(char* pATCmd, uint32_t timeOut, char* pWait, char* pResp);
-  bool ReadNoQuestionMark(char* pATCmd, uint32_t timeOut, char* pWait, char* pResp);
-}; /* end class */
+/* DNS commands */
+bool ATUBLOX_DNSResolveURL(char* pURL, char* pResolvedIP, char* pResp);
+bool ATUBLOX_DNSSetDynamicUpdate(bool isEnable, char* pResp);
+
+/* GPRS commands */
+bool ATUBLOX_GPRSSetAttach(bool isAttach, char* pResp);
+bool ATUBLOX_GPRSIsAttach(bool* pResult, char* pResp);
+
+bool ATUBLOX_GPRSSetAuthentication(uint8_t profileId, uint8_t type, char* pResp);
+bool ATUBLOX_GPRSSetAPN(uint8_t profileId, char* pAPN, char* pResp);
+bool ATUBLOX_GPRSSetUsername(uint8_t profileId, char* pUserName, char* pResp);
+bool ATUBLOX_GPRSSetPassword(uint8_t profileId, char* pPassword, char* pResp);
+
+
+bool ATUBLOX_GPRSSetPDP(uint8_t profileId, bool isActive, char* pResp);
+
+/* HTTP commands */
+bool ATUBLOX_HTTPResetParameters(uint8_t httpID, char* pResp);
+bool ATUBLOX_HTTPSetDomain(uint8_t httpID, char* domain, char* pResp);
+bool ATUBLOX_HTTPSetRemotePort(uint8_t httpID, uint32_t port, char* pResp);
+bool ATUBLOX_HTTPSetUsername(uint8_t httpID, char* pUsername, char* pResp);
+bool ATUBLOX_HTTPSetPassword(uint8_t httpID, char* pPassword, char* pResp);
+bool ATUBLOX_HTTPSetAuthentication(uint8_t httpID, bool isEnable, char* pResp);
+bool ATUBLOX_HTTPSetCustomHeader(uint8_t httpID, uint8_t headerIdx, char* headerName, char* headerVal, char* pResp);
+bool ATUBLOX_HTTPGetRequest(uint8_t httpID, char* pUri, char* pSaveFileName, bool* pResult, char* pResp); 
+/* dummy implement. need change later */ bool HTTPParseResponse(char* fileName, char* pResp);
+
+/* Flash commmands */
+bool ATUBLOX_FlashReadFile(char* fileName, char* pResp);
+bool ATUBLOX_FlashDelFile(char* fileName, char* pResp);
+
+/* GNSS commands */
+bool ATUBLOX_GNSSSetPower(bool isOn, uint8_t aidMode, uint32_t GNSSSystem, char* pResp);
+bool ATUBLOX_GNSSSetURC(bool isEnable, char* pResp);
+bool ATUBLOX_GNSSSetProfile(uint32_t code, char* pResp);
+bool ATUBLOX_GNSSSetSensor(void);
+bool ATUBLOX_GNSSConfigData(uint8_t sensor, uint8_t responseType, uint32_t timeout, uint16_t accuracy, char* pResp);
+bool ATUBLOX_GNSSSetFixData(bool isEnable, char* pResp);
+bool ATUBLOX_GNSSGetFixData(char* pResp);
+bool ATUBLOX_GNSSSetGeoPos(bool isEnable, char* pResp);
+bool ATUBLOX_GNSSGetGeoPos(char* pResp);
+bool ATUBLOX_GNSSSetNumOfSatellites(bool isEnable, char* pResp);
+bool ATUBLOX_GNSSGetNumOfSatellites(char* pResp);
+bool ATUBLOX_GNSSSetRMC(bool isEnable, char* pResp);
+bool ATUBLOX_GNSSGetRMC(char* pResp);
+bool ATUBLOX_GNSSSetVTG(bool isEnable, char* pResp);
+bool ATUBLOX_GNSSGetVTG(char* pResp);
+bool ATUBLOX_GNSSSetSatelliteInfo(bool isEnable, char* pResp);
+bool ATUBLOX_GNSSGetSatelliteInfo(char* pResp);
+
+bool ATUBLOX_GNSSGetULOCData(bool byGNSS, uint32_t timeOutInSec, uint32_t accuracyInMet, char* pData, char* pResp);
+
+/* general read commands */
+bool ATUBLOX_Read(char* pATCmd, uint32_t timeOut, char* pWait, char* pResp);
+bool ATUBLOX_ReadNoQuestionMark(char* pATCmd, uint32_t timeOut, char* pWait, char* pResp);
 
 
 #endif /*  __AT_UBLOX_C_H */

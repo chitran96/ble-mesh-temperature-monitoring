@@ -42,6 +42,8 @@
       <folder Name="lib">
         <file file_name="../lib/at_low_c.c" />
         <file file_name="../lib/systmr.c" />
+        <file file_name="../lib/at_ublox_c.c" />
+        <file file_name="../lib/at_mobile_c.c" />
       </folder>
     </folder>
     <folder Name="Core">
