@@ -8,6 +8,7 @@
 */
 
 #include "at_ublox_c.h"
+#include "log.h"
 
 static char AT_RESP_OK[] = "OK\r\n";
 //const char RESPONSE_ERROR[] = "ERROR\r\n";
@@ -643,14 +644,17 @@ bool ATUBLOX_GPRSSetAttach(bool isAttach, char *pResp) {
 */
 bool ATUBLOX_GPRSIsAttach(bool *pResult, char *pResp) {
   *pResult = false;
-  if (ATUBLOX_Read(AT_CMD_CGATT, TIMEOUT_CMD_DEFAULT, AT_RESP_OK, pResp)) {
+  if (ATUBLOX_Read(AT_CMD_CGATT, TIMEOUT_CMD_CGATT, AT_RESP_OK, pResp)) 
+  {
     if (strstr(pResp, "+CGATT: 1") != NULL) {
       *pResult = true;
     } else {
       *pResult = false;
     }
     return true;
-  } else {
+  } 
+  else 
+  {
     return false;
   }
 };
@@ -940,7 +944,7 @@ bool ATUBLOX_HTTPSetRemotePort(uint8_t httpID, uint32_t port, char *pResp) {
 
   ATLOW_SendChar(COMMA_SYMB);
   ATLOW_SendNum(port);
-  return ATLOW_SendAndWait(AT_CMD_UHTTP, TIMEOUT_CMD_DEFAULT, AT_RESP_OK, pResp);
+  return ATLOW_SendAndWait(CRLF, TIMEOUT_CMD_DEFAULT, AT_RESP_OK, pResp);
 };
 
 //********************************************************************
@@ -1518,6 +1522,7 @@ bool ATUBLOX_Read(at_ublox_cmd_t readPara, uint32_t timeOut, char* pResp)
 */
 bool ATUBLOX_Read(char *pATCmd, uint32_t timeOut, char *pWait, char *pResp) {
   ATLOW_SendStr(pATCmd);
+  //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Read %s\n", pATCmd);
   return ATLOW_SendAndWait((char *)"?\r\n", timeOut, pWait, pResp);
 }
 

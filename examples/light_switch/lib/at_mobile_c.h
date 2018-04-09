@@ -50,19 +50,19 @@
 
 #define HTTP_PROFILE_ID						      (0)
 
-#define MOBI_APN							          ("m-wap")
-#define MOBI_USERNAME						        ("mms")
-#define MOBI_PASSWORD						        ("mms")
+#define MOBI_APN                        ("m-wap")
+#define MOBI_USERNAME			("mms")
+#define MOBI_PASSWORD			("mms")
 #define VINA_APN                        ("m3-world")
 #define VINA_USERNAME                   ("mms")
 #define VINA_PASSWORD                   ("mms")
-#define VIETTEL_APN											("v-internet")
-#define VIETTEL_USERNAME								("")
-#define VIETTEL_PASSWORD								("")
+#define VIETTEL_APN                     ("v-internet")
+#define VIETTEL_USERNAME		("")
+#define VIETTEL_PASSWORD		("")
 
 
-#define SERVER_DOMAIN_DEFAULT						 ("34.230.4.191")
-#define SERVER_PORT_DEFAULT 	      	    (7000)
+#define SERVER_DOMAIN_DEFAULT		("api.thingspeak.com")
+#define SERVER_PORT_DEFAULT 	      	(80)
 
 #define FILE_SAVE_RESPONSE				      ("get.ffs")
 
@@ -91,7 +91,7 @@ bool ATMOBILE_DeleteAllSMS(char* pLastResp);
 void ATMOBILE_SetRemoteServer(char* pIP, uint32_t port);
 bool ATMOBILE_TurnOnGPRSAndPDP(char* pResp);
 bool ATMOBILE_TurnOffGPRSAndPDP(char* pResp);
-bool ATMOBILE_UploadData(char* pSendData, char* pServerResponse, char* pResp);
+bool ATMOBILE_UploadData(char* pSendData, char* pResp);
 
 bool ATMOBILE_InitGNSSParameters(bool forNMEA, char* pLastResp);
 bool ATMOBILE_TurnOnGNSSModule(char* pResp);

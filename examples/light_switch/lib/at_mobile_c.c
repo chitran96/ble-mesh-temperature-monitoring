@@ -1,6 +1,8 @@
 #include "at_mobile_c.h"
+#include "nrf_delay.h"
 #include "log.h"
 #include <string.h>
+
 //////////////////////////////////////////////////////////////
 ////    PRIVATE METHODs     //////////////////
 //*************************************************************
@@ -28,13 +30,13 @@ uint32_t  readPeriod;
     @brief Constructor
     @return none
 */
-ATMOBILE_Init(void) {
+void ATMOBILE_Init(void) {
   strcpy(sIMEI, "");
   strcpy(sIMSI, "");
   strcpy(sSIMID, "");
-  strcpy(sGPRSAPN, GPRS_APN_STREAM);
-  strcpy(sGPRSUsername, GPRS_USERNAME_STREAM);
-  strcpy(sGPRSPassword, GPRS_PASSWORD_STREAM);
+  strcpy(sGPRSAPN, VIETTEL_APN);
+  strcpy(sGPRSUsername, VIETTEL_USERNAME);
+  strcpy(sGPRSPassword, VIETTEL_PASSWORD);
   strcpy(sServerDomain, SERVER_DOMAIN_DEFAULT);
   sServerPort = SERVER_PORT_DEFAULT;
 };
@@ -101,18 +103,26 @@ bool ATMOBILE_MOBIReinit(char *pLastResp) {
   //   //DB_Puts("GNSS init success!\r\n");
   // }
 
-  if (!ATUBLOX_GPRSSetAuthentication(GPRS_PROFILE_ID, GPRS_AUTH_TYPE, pLastResp)) {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GPRS author fail. Resp: %s\n", pLastResp);
-    return false;
+//  if (!ATUBLOX_GPRSSetAuthentication(GPRS_PROFILE_ID, GPRS_AUTH_TYPE, pLastResp)) {
+//    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GPRS author fail. Resp: %s\n", pLastResp);
+//    return false;
+//  }
+
+  if (!ATMOBILE_TurnOffGPRSAndPDP(pLastResp))
+  {
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn off GPRS failed Resp: %s\n", pLastResp);
   }
+
   if (!ATUBLOX_GPRSSetAPN(GPRS_PROFILE_ID, sGPRSAPN, pLastResp)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GPRS apn fail. Resp: %s\n", pLastResp);
     return false;
   }
   if (!ATUBLOX_GPRSSetUsername(GPRS_PROFILE_ID, sGPRSUsername, pLastResp)) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GPRS username fail. Resp: %s\n", pLastResp);
     return false;
   }
   if (!ATUBLOX_GPRSSetPassword(GPRS_PROFILE_ID, sGPRSPassword, pLastResp)) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GPRS password fail. Resp: %s\n", pLastResp);
     return false;
   }
 
@@ -121,7 +131,7 @@ bool ATMOBILE_MOBIReinit(char *pLastResp) {
   //   return false;
   // }
   //ensure GPRS is detached after reset
-  ATMOBILE_TurnOffGPRSAndPDP(pLastResp);
+
 
   //delay(500);
   //if (! SMSDeleteAll(true, pLastResp))	{
@@ -321,7 +331,7 @@ bool ATMOBILE_TurnOnGPRSAndPDP(char *pResp) {
       __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Set GPRS failed response: %s\n", pResp);
       return false;
     }
-    //delay(500);
+    nrf_delay_ms(500);
     if (!ATUBLOX_GPRSSetPDP(GPRS_PROFILE_ID, true, pResp)) {
       __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Set PDP failed response: %s\n", pResp);
       return false;
@@ -344,7 +354,7 @@ bool ATMOBILE_TurnOnGPRSAndPDP(char *pResp) {
 bool ATMOBILE_TurnOffGPRSAndPDP(char *pResp) {
   bool isAttach;
 
-  //ATUBLOX_GPRSSetPDP(GPRS_PROFILE_ID, false, pResp); // turn off PDP
+  ATUBLOX_GPRSSetPDP(GPRS_PROFILE_ID, false, pResp); // turn off PDP
   if (!ATUBLOX_GPRSIsAttach(&isAttach, pResp)) {
     return false;
   } //check attach status
@@ -377,39 +387,35 @@ void ATMOBILE_SetRemoteServer(char *pIP, uint32_t port) {
     @param[out] pResp The full received response
     @return TRUE done success
 */
-bool ATMOBILE_UploadData(char *pSendData, char *pServerResponse, char *pResp) {
+bool ATMOBILE_UploadData(char *pSendData, char *pResp) {
   bool result;
-  sprintf(_uri, "/ut_device/pingDevice?device_data=s:%s,e:%s,t:g,%s", sSIMID, sIMEI, pSendData);
+  sprintf(_uri, "/update?api_key=YRSGAFOJYKQX2R63&field1=%s", pSendData);
 
-  //DB_Printf("Data is: %s\n", _uri);
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Data is: %s\n", _uri);
   if (!ATUBLOX_HTTPResetParameters(HTTP_PROFILE_ID, pResp)) {
-    //DB_Printf("HTTP reset failed, resp %s\r\n", pResp);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "HTTP reset failed, resp %s\r\n", pResp);
     return false;
   }
-  if (!ATUBLOX_HTTPSetCustomHeader(HTTP_PROFILE_ID, 0, (char *)"Content-Type", (char *)"application/json", pResp)) {
-    //DB_Printf("HTTP set header failed, resp %s\r\n", pResp);
-    return false;
-  }
+//  if (!ATUBLOX_HTTPSetCustomHeader(HTTP_PROFILE_ID, 0, (char *)"Content-Type", (char *)"application/json", pResp)) {
+//    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "HTTP set header failed, resp %s\r\n", pResp);
+//    return false;
+//  }
   if (!ATUBLOX_HTTPSetDomain(HTTP_PROFILE_ID, sServerDomain, pResp)) {
-    //DB_Printf("HTTP set domain failed, resp %s\r\n", pResp);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "HTTP set domain failed, resp %s\r\n", pResp);
     return false;
   }
   if (!ATUBLOX_HTTPSetRemotePort(HTTP_PROFILE_ID, sServerPort, pResp)) {
-    //DB_Printf("HTTP set port %d failed, resp %s\r\n", sServerPort, pResp);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "HTTP set port %d failed, resp %s\r\n", sServerPort, pResp);
     return false;
   }
   if (!ATUBLOX_HTTPGetRequest(HTTP_PROFILE_ID, _uri, (char *)FILE_SAVE_RESPONSE, &result, pResp)) {
-    //DB_Printf("HTTP GET request failed, resp %s\r\n", pResp);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "HTTP GET request failed, resp %s\r\n", pResp);
     return false;
   }
   if (!result) {
-    //DB_Printf("HTTP server response failed, resp %s\r\n", pResp);
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "HTTP server response failed, resp %s\r\n", pResp);
     return false;
   }
-  //if (!FlashReadFile((char*) FILE_SAVE_RESPONSE, pResp))
-  //{
-  //	return false;
-  //}
   return true;
 };
 

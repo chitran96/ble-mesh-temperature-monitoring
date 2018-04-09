@@ -69,8 +69,6 @@
 #include "app_timer.h"
 #include "app_uart.h"
 
-#include "at_low_c.h"
-#include "at_ublox_c.h"
 #include "at_mobile_c.h"
 
 /*****************************************************************************
@@ -110,6 +108,8 @@ static void client_get_status_handle(void);
 
 static volatile bool timerFlag = false;
 static volatile bool isGettingData = false;
+
+char buffer[200];
 
 /*****************************************************************************
  * Static functions
@@ -213,16 +213,13 @@ static void access_setup(void) {
     ERROR_CHECK(dsm_subnet_add(0, m_netkey, &m_netkey_handle));
     ERROR_CHECK(dsm_appkey_add(0, m_netkey_handle, m_appkey, &m_appkey_handle));
   }
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang 0\n");
   if (access_flash_config_load()) {
     m_configured_devices = configured_devices_count_get();
   } else {
     /* Bind the keys to the health client. */
     //ERROR_CHECK();
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "return code %d\n", access_model_application_bind(m_health_client.model_handle, m_appkey_handle));
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang -1\n");
     ERROR_CHECK(access_model_publish_application_set(m_health_client.model_handle, m_appkey_handle));
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang -2\n");
 
     /* Bind the keys to the Simple OnOff clients. */
     for (uint32_t i = 0; i < SERVER_COUNT; ++i) {
@@ -235,11 +232,9 @@ static void access_setup(void) {
     ERROR_CHECK(access_model_publish_address_set(m_clients[GROUP_CLIENT_INDEX].model_handle, m_group_handle));
     access_flash_config_store();
   }
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang 1\n");
   provisioner_init();
   if (m_configured_devices < m_provisioned_devices) {
     provisioner_configure(UNPROV_START_ADDRESS + m_configured_devices);
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Hang 2\n");
   } else if (m_provisioned_devices < SERVER_COUNT) {
     provisioner_wait_for_unprov(UNPROV_START_ADDRESS + m_provisioned_devices);
   }
@@ -450,6 +445,8 @@ void _APP_StartTimer(app_timer_id_t timer, uint32_t period) {
 
 void _APP_OnGenTimeout(void *p_context) {
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "App timer event\n");
+  timerFlag = true;
+  //client_get_status_handle();
 };
 
 int main(void) {
@@ -467,10 +464,6 @@ int main(void) {
   access_setup();
   //rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
   init_timer1();
-  
-
-  // init uart
-
 
   APP_TIMER_DEF(appGenTimeout);
   res = app_timer_init();
@@ -479,57 +472,45 @@ int main(void) {
   if (res == NRF_SUCCESS) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- Good timer! -------\n");
   }
-    
-  _APP_StartTimer(appGenTimeout, 5000);
 
-  char buffer[200];
+  _APP_StartTimer(appGenTimeout, 10000);
 
-  if (!ATLOW_Reinit(115200, true, buffer, 150)) {
+  if (!ATLOW_Reinit(115200, true, buffer, 200)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "UART failed\n");
   }
 
-  if (!ATLOW_SendAndWait("AT\r\n", 2000, "OK\r\n", buffer))
-  {
+  if (!ATLOW_SendAndWait("AT\r\n", 2000, "OK\r\n", buffer)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Ping failed resp %s\n", buffer);
-  }
-  else
-  {
+  } else {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got resp %s\n", buffer);
   }
 
-  if (!ATLOW_SendAndWait("AT+CSQ\r\n", 2000, "OK\r\n", buffer))
-  {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Ping failed resp %s\n", buffer);
-  }
-  else
-  {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got resp %s\n", buffer);
-  }
+  ATMOBILE_Init();
 
-  if (!ATMOBILE_MOBIReinit(buffer))
-  {
+  if (!ATMOBILE_MOBIReinit(buffer)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init failed resp %s\n", buffer);
-  }
-  else
-  {
+  } else {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init success\n");
   }
 
-  if (!ATMOBILE_TurnOnGPRSAndPDP(buffer))
-  {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn internet on failed resp %s\n", buffer);
-  }
-  else
-  {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn internet on success resp %s\n", buffer);
-  }
+  nrf_delay_ms(50);
 
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");
   while (true) {
     //TODO: Handle timerFlag, isGettingData
     if (timerFlag) {
       timerFlag = false;
-      client_get_status_handle();
+      if (!ATMOBILE_TurnOnGPRSAndPDP(buffer)) {
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn internet on failed resp %s\n", buffer);
+      } else {
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn internet on success resp %s\n", buffer);
+      }
+
+      if (!ATMOBILE_UploadData("22", buffer)) {
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data failed resp %s\n", buffer);
+      } else {
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data success resp %s\n", buffer);
+      }
     }
     (void)sd_app_evt_wait();
   }

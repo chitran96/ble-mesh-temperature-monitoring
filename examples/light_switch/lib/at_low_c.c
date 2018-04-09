@@ -7,6 +7,7 @@
  @author Bui Van Hieu <vanhieubk@gmail.com>
 */
 #include "at_low_c.h"
+#include "nrf_delay.h"
 
 
 char*    spResp;
@@ -29,6 +30,7 @@ static void uart_error_handle(app_uart_evt_t * p_event);
 	@return none
 */
 void ATLOW_FlushRxBuf(void){
+  nrf_delay_ms(20);
 	uint8_t c;
 	while (app_uart_get(&c) == NRF_SUCCESS);
 };
