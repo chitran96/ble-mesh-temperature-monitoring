@@ -69,9 +69,11 @@
 /* Nordic SDK lib */
 #include "app_timer.h"
 #include "app_uart.h"
+#include "nrf_temp.h"
 
 /* My lib */
 #include "at_mobile_c.h"
+#include "systmr.h"
 
 /*****************************************************************************
  * Definitions
@@ -84,9 +86,9 @@
 
 /* My define */
 
-#define UBLOX_BAUDRATE          (115200)
-#define GET_TEMP_PERIOD_S       (20) // in seconds
-#define MAX_RESP_BUFF           (700)
+#define UBLOX_BAUDRATE (115200)
+#define GET_TEMP_PERIOD_S (20) // in seconds
+#define MAX_RESP_BUFF (700)
 
 /*****************************************************************************
  * Static data
@@ -114,14 +116,17 @@ static void client_get_status_handle(void);
 
 /* My vars */
 APP_TIMER_DEF(appGatherTimeout);
-
+APP_TIMER_DEF(appSysTmr);
 
 /* My functions*/
 static void APP_StartTimer(app_timer_id_t timer, uint32_t period);
 static void APP_OnGatherTimeout(void *p_context);
-static bool APP_HandleTimer(void);
+static void APP_OnSysTmr(void *p_context);
 
+static bool APP_HandleTimer(void);
 static bool APP_Init(void);
+
+static int32_t APP_ReadTemp(void);
 
 static volatile bool timerFlag = false;
 static volatile bool isGettingData = false;
@@ -315,9 +320,7 @@ static void button_event_handler(uint32_t button_number) {
     isGettingData = !isGettingData;
     if (isGettingData) {
       APP_StartTimer(appGatherTimeout, GET_TEMP_PERIOD_S * 1000);
-    } 
-    else 
-    {
+    } else {
       app_timer_stop(appGatherTimeout);
     }
     break;
@@ -431,8 +434,12 @@ void APP_OnGatherTimeout(void *p_context) {
   //client_get_status_handle();
 };
 
-static bool APP_Init(void)
+void APP_OnSysTmr(void *p_context)
 {
+  // dummy
+}
+
+static bool APP_Init(void) {
   uint32_t res;
 
   res = app_timer_init();
@@ -441,39 +448,45 @@ static bool APP_Init(void)
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init timer failed, err code %d\n", res);
     return false;
   }
+  res = app_timer_create(&appSysTmr, APP_TIMER_MODE_SINGLE_SHOT, APP_OnSysTmr);
+  if (res != NRF_SUCCESS) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init timer failed, err code %d\n", res);
+    return false;
+  }
+
+  APP_StartTimer(appSysTmr, 1);
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Test SYSTMR %d\n", SYSTMR_millis());
+  nrf_delay_ms(3000);
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Test SYSTMR %d\n", SYSTMR_millis());
 
   if (!ATLOW_Reinit(UBLOX_BAUDRATE, true, buffer, MAX_RESP_BUFF)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init UART failed\n");
     return false;
+  } else {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init UART success\n");
   }
-  else
-  {
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init UART success\n");
-  }
-  
+
   // wait for stable
   nrf_delay_ms(3000);
-  
+
   // set apn, server, port,...
   ATMOBILE_Init();
 
-  if (!ATMOBILE_MOBIReinit(buffer)) 
-  {
+
+  if (!ATMOBILE_MOBIReinit(buffer)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init failed resp %s\n", buffer);
     return false;
-  } 
-  else 
-  {
+  } else {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init success\n");
   }
 
   nrf_delay_ms(50);
-  return true;
 
+  //nrf_temp_init();
+  return true;
 };
 
-bool APP_HandleTimer(void)
-{
+bool APP_HandleTimer(void) {
   if (!ATMOBILE_TurnOnGPRSAndPDP(buffer)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn GPRS on failed resp %s\n", buffer);
     return false;
@@ -482,15 +495,21 @@ bool APP_HandleTimer(void)
   if (!ATMOBILE_UploadData("22", buffer)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data failed resp %s\n", buffer);
     return false;
-  } 
+  }
 
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn off GPRS to save data charge\n");
   if (!ATMOBILE_TurnOffGPRSAndPDP(buffer)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn GPRS off failed resp %s\n", buffer);
     return false;
-  } 
+  }
 
   return true;
+};
+
+int32_t APP_ReadTemp(void) {
+  int32_t temp;
+  sd_temp_get(&temp);
+  return temp / 4;
 };
 
 int main(void) {
@@ -509,19 +528,19 @@ int main(void) {
   //rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
 
   /* My section */
-  if (!APP_Init())
-  {
+  if (!APP_Init()) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Something wrong, hanging......\n");
-    while (true);
+    while (true)
+      ;
   }
- 
+
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");
-  
+
   while (true) {
     if (timerFlag) {
       timerFlag = false;
-      if (APP_HandleTimer())
-      {
+      //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Read data %d\n", APP_ReadTemp());
+      if (APP_HandleTimer()) {
         __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data success\n");
       }
     }

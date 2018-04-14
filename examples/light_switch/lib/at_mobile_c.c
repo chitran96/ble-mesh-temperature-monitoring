@@ -85,6 +85,8 @@ bool ATMOBILE_MOBIReinit(char *pLastResp) {
     //DB_Puts("AT sync OK\n");
   }
 
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "AT sync OK. Resp: %s\n", pLastResp);
+
   /* set ECHO off */
   if (!ATUBLOX_SetEcho(false, pLastResp)) {
     //DB_Printf("ECHO off fail. Resp: %s\n", pLastResp);
@@ -108,15 +110,18 @@ bool ATMOBILE_MOBIReinit(char *pLastResp) {
 //    return false;
 //  }
 
+
   if (!ATMOBILE_TurnOffGPRSAndPDP(pLastResp))
   {
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn off GPRS failed Resp: %s\n", pLastResp);
   }
 
+
   if (!ATUBLOX_GPRSSetAPN(GPRS_PROFILE_ID, sGPRSAPN, pLastResp)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GPRS apn fail. Resp: %s\n", pLastResp);
     return false;
   }
+
   if (!ATUBLOX_GPRSSetUsername(GPRS_PROFILE_ID, sGPRSUsername, pLastResp)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "GPRS username fail. Resp: %s\n", pLastResp);
     return false;
@@ -353,11 +358,14 @@ bool ATMOBILE_TurnOnGPRSAndPDP(char *pResp) {
 */
 bool ATMOBILE_TurnOffGPRSAndPDP(char *pResp) {
   bool isAttach;
-
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Before PDP response: %s\n", pResp);
   ATUBLOX_GPRSSetPDP(GPRS_PROFILE_ID, false, pResp); // turn off PDP
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "After PDP response: %s\n", pResp);
   if (!ATUBLOX_GPRSIsAttach(&isAttach, pResp)) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Get GPRS stt failed response: %s\n", pResp);
     return false;
   } //check attach status
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "After get GPRS response: %s\n", pResp);
   if (isAttach) {
     //DB_Puts("Detach GPRS...\n");
     if (!ATUBLOX_GPRSSetAttach(false, pResp)) {

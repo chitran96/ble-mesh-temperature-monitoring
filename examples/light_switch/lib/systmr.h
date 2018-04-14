@@ -13,10 +13,12 @@
 #include "app_timer.h"
 
 #define SYSTMR_NUM_MSEC_PER_TICK    (125)
-#define SYSTMR_NUM_TICK_PER_SEC     (8)
+#define SYSTMR_NUM_TICK_PER_SEC     (APP_TIMER_TICKS(1000))
+#define SYSTMR_NUM_TICK_PER_MSEC    (APP_TIMER_TICKS(1))
 
 bool SYSTMR_Reinit(void);
 uint32_t SYSTMR_Second(void);
+uint32_t SYSTMR_millis(void);
 uint32_t SYSTMR_GetNumTick(void);
 
 

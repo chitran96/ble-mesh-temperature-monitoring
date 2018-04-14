@@ -36,6 +36,14 @@ uint32_t SYSTMR_Second(void){
 
 //*************************************************************
 /**
+    @brief Get system timer value in ms
+    @return value
+*/
+uint32_t SYSTMR_millis(void){
+  return SYSTMR_GetNumTick() / SYSTMR_NUM_TICK_PER_MSEC;
+}
+//*************************************************************
+/**
     @brief Get number of elapsed ticks
     @return Number of ticks
 */
