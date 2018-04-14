@@ -331,18 +331,18 @@ bool ATMOBILE_TurnOnGPRSAndPDP(char *pResp) {
       __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Set GPRS failed response: %s\n", pResp);
       return false;
     }
-    nrf_delay_ms(500);
-    if (!ATUBLOX_GPRSSetPDP(GPRS_PROFILE_ID, true, pResp)) {
-      __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Set PDP failed response: %s\n", pResp);
-      return false;
-    }
     if (!ATUBLOX_GPRSIsAttach(&isAttach, pResp)) {
       __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Check GPRS stt failed response: %s\n", pResp);
       return false;
     }
   }
+  nrf_delay_ms(500);
+  if (!ATUBLOX_GPRSSetPDP(GPRS_PROFILE_ID, true, pResp)) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Set PDP failed response: %s\n", pResp);
+    return false;
+  }
 
-  return isAttach;
+  return true;
 };
 
 //*************************************************************

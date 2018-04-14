@@ -66,9 +66,11 @@
 #include "light_switch_example_common.h"
 #include "rtt_input.h"
 
+/* Nordic SDK lib */
 #include "app_timer.h"
 #include "app_uart.h"
 
+/* My lib */
 #include "at_mobile_c.h"
 
 /*****************************************************************************
@@ -80,7 +82,11 @@
 #define BUTTON_NUMBER_GROUP (3)
 #define RTT_INPUT_POLL_PERIOD_MS (100)
 
-#define GET_TEMP_PERIOD_S (5)
+/* My define */
+
+#define UBLOX_BAUDRATE          (115200)
+#define GET_TEMP_PERIOD_S       (20) // in seconds
+#define MAX_RESP_BUFF           (700)
 
 /*****************************************************************************
  * Static data
@@ -106,10 +112,21 @@ static void client_status_cb(const simple_on_off_client_t *p_self, uint8_t curTe
 static void health_event_cb(const health_client_t *p_client, const health_client_evt_t *p_event);
 static void client_get_status_handle(void);
 
+/* My vars */
+APP_TIMER_DEF(appGatherTimeout);
+
+
+/* My functions*/
+static void APP_StartTimer(app_timer_id_t timer, uint32_t period);
+static void APP_OnGatherTimeout(void *p_context);
+static bool APP_HandleTimer(void);
+
+static bool APP_Init(void);
+
 static volatile bool timerFlag = false;
 static volatile bool isGettingData = false;
 
-char buffer[200];
+char buffer[MAX_RESP_BUFF];
 
 /*****************************************************************************
  * Static functions
@@ -297,11 +314,11 @@ static void button_event_handler(uint32_t button_number) {
     timerFlag = false;
     isGettingData = !isGettingData;
     if (isGettingData) {
-      NRF_TIMER1->TASKS_STOP = 0;
-      NRF_TIMER1->TASKS_START = 1;
-    } else {
-      NRF_TIMER1->TASKS_START = 0;
-      NRF_TIMER1->TASKS_STOP = 1;
+      APP_StartTimer(appGatherTimeout, GET_TEMP_PERIOD_S * 1000);
+    } 
+    else 
+    {
+      app_timer_stop(appGatherTimeout);
     }
     break;
   case 1:
@@ -388,41 +405,6 @@ static void rtt_input_handler(int key) {
   }
 }
 
-void init_timer1() {
-  NRF_TIMER1->MODE = TIMER_MODE_MODE_Timer;
-  NRF_TIMER1->TASKS_CLEAR = 1;
-  // set prescalar n
-  // f = 16 MHz / 2^(n)
-  uint8_t prescaler = 4; // 1MHz
-  NRF_TIMER1->PRESCALER = prescaler;
-  NRF_TIMER1->BITMODE = TIMER_BITMODE_BITMODE_32Bit;
-
-  uint32_t sec = GET_TEMP_PERIOD_S;
-  uint32_t ticks = sec * 1000000; // 1MHz
-
-  // set compare
-  NRF_TIMER1->CC[1] = ticks;
-
-  // enable compare 1
-  NRF_TIMER1->INTENSET =
-      (TIMER_INTENSET_COMPARE1_Enabled << TIMER_INTENSET_COMPARE1_Pos);
-
-  // use the shorts register to clear compare 1
-  NRF_TIMER1->SHORTS = (TIMER_SHORTS_COMPARE1_CLEAR_Enabled << TIMER_SHORTS_COMPARE1_CLEAR_Pos);
-}
-
-void TIMER1_IRQHandler() {
-  if (NRF_TIMER1->EVENTS_COMPARE[1] &&
-      NRF_TIMER1->INTENSET & TIMER_INTENSET_COMPARE1_Msk) {
-
-    // clear compare register event
-    NRF_TIMER1->EVENTS_COMPARE[1] = 0;
-  }
-
-  timerFlag = true;
-
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Timer event\n");
-}
 void uart_error_handle(app_uart_evt_t *p_event) {
   //if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR){
   //APP_ERROR_HANDLER(p_event->data.error_communication);
@@ -432,21 +414,83 @@ void uart_error_handle(app_uart_evt_t *p_event) {
   //}
 }
 
-void _APP_StartTimer(app_timer_id_t timer, uint32_t period) {
+void APP_StartTimer(app_timer_id_t timer, uint32_t period) {
   uint32_t ticks;
   uint32_t res;
 
   ticks = APP_TIMER_TICKS(period);
   res = app_timer_start(timer, ticks, NULL);
-  if (res == NRF_SUCCESS) {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- Yay timer! -------\n");
+  if (res != NRF_SUCCESS) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Start timer failed\n");
   }
 };
 
-void _APP_OnGenTimeout(void *p_context) {
+void APP_OnGatherTimeout(void *p_context) {
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "App timer event\n");
   timerFlag = true;
   //client_get_status_handle();
+};
+
+static bool APP_Init(void)
+{
+  uint32_t res;
+
+  res = app_timer_init();
+  res = app_timer_create(&appGatherTimeout, APP_TIMER_MODE_REPEATED, APP_OnGatherTimeout);
+  if (res != NRF_SUCCESS) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init timer failed, err code %d\n", res);
+    return false;
+  }
+
+  if (!ATLOW_Reinit(UBLOX_BAUDRATE, true, buffer, MAX_RESP_BUFF)) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init UART failed\n");
+    return false;
+  }
+  else
+  {
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init UART success\n");
+  }
+  
+  // wait for stable
+  nrf_delay_ms(3000);
+  
+  // set apn, server, port,...
+  ATMOBILE_Init();
+
+  if (!ATMOBILE_MOBIReinit(buffer)) 
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init failed resp %s\n", buffer);
+    return false;
+  } 
+  else 
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init success\n");
+  }
+
+  nrf_delay_ms(50);
+  return true;
+
+};
+
+bool APP_HandleTimer(void)
+{
+  if (!ATMOBILE_TurnOnGPRSAndPDP(buffer)) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn GPRS on failed resp %s\n", buffer);
+    return false;
+  }
+
+  if (!ATMOBILE_UploadData("22", buffer)) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data failed resp %s\n", buffer);
+    return false;
+  } 
+
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn off GPRS to save data charge\n");
+  if (!ATMOBILE_TurnOffGPRSAndPDP(buffer)) {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn GPRS off failed resp %s\n", buffer);
+    return false;
+  } 
+
+  return true;
 };
 
 int main(void) {
@@ -463,53 +507,22 @@ int main(void) {
   mesh_core_setup();
   access_setup();
   //rtt_input_enable(rtt_input_handler, RTT_INPUT_POLL_PERIOD_MS);
-  init_timer1();
 
-  APP_TIMER_DEF(appGenTimeout);
-  res = app_timer_init();
-
-  res = app_timer_create(&appGenTimeout, APP_TIMER_MODE_REPEATED, _APP_OnGenTimeout);
-  if (res == NRF_SUCCESS) {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- Good timer! -------\n");
+  /* My section */
+  if (!APP_Init())
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Something wrong, hanging......\n");
+    while (true);
   }
-
-  _APP_StartTimer(appGenTimeout, 10000);
-
-  if (!ATLOW_Reinit(115200, true, buffer, 200)) {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "UART failed\n");
-  }
-
-  if (!ATLOW_SendAndWait("AT\r\n", 2000, "OK\r\n", buffer)) {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Ping failed resp %s\n", buffer);
-  } else {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got resp %s\n", buffer);
-  }
-
-  ATMOBILE_Init();
-
-  if (!ATMOBILE_MOBIReinit(buffer)) {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init failed resp %s\n", buffer);
-  } else {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "MOBI Init success\n");
-  }
-
-  nrf_delay_ms(50);
-
+ 
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- All setup is done! -------\n");
+  
   while (true) {
-    //TODO: Handle timerFlag, isGettingData
     if (timerFlag) {
       timerFlag = false;
-      if (!ATMOBILE_TurnOnGPRSAndPDP(buffer)) {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn internet on failed resp %s\n", buffer);
-      } else {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn internet on success resp %s\n", buffer);
-      }
-
-      if (!ATMOBILE_UploadData("22", buffer)) {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data failed resp %s\n", buffer);
-      } else {
-        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data success resp %s\n", buffer);
+      if (APP_HandleTimer())
+      {
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data success\n");
       }
     }
     (void)sd_app_evt_wait();

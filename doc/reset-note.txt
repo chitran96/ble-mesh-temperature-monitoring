@@ -1,0 +1,7 @@
+  ioObj.SetMobilePwrOnPin(true);
+  nrf_delay_ms(50);
+
+  ioObj.SetMobileResetPin(false);
+  nrf_delay_ms(60);
+  ioObj.SetMobileResetPin(true);
+  nrf_delay_ms(3000);
