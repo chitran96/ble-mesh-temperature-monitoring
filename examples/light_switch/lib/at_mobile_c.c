@@ -358,14 +358,14 @@ bool ATMOBILE_TurnOnGPRSAndPDP(char *pResp) {
 */
 bool ATMOBILE_TurnOffGPRSAndPDP(char *pResp) {
   bool isAttach;
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Before PDP response: %s\n", pResp);
+  //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Before PDP response: %s\n", pResp);
   ATUBLOX_GPRSSetPDP(GPRS_PROFILE_ID, false, pResp); // turn off PDP
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "After PDP response: %s\n", pResp);
+  //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "After PDP response: %s\n", pResp);
   if (!ATUBLOX_GPRSIsAttach(&isAttach, pResp)) {
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Get GPRS stt failed response: %s\n", pResp);
+    //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Get GPRS stt failed response: %s\n", pResp);
     return false;
   } //check attach status
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "After get GPRS response: %s\n", pResp);
+  //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "After get GPRS response: %s\n", pResp);
   if (isAttach) {
     //DB_Puts("Detach GPRS...\n");
     if (!ATUBLOX_GPRSSetAttach(false, pResp)) {
@@ -397,7 +397,7 @@ void ATMOBILE_SetRemoteServer(char *pIP, uint32_t port) {
 */
 bool ATMOBILE_UploadData(char *pSendData, char *pResp) {
   bool result;
-  sprintf(_uri, "/update?api_key=YRSGAFOJYKQX2R63&field1=%s", pSendData);
+  strcpy(_uri, pSendData);
 
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Data is: %s\n", _uri);
   if (!ATUBLOX_HTTPResetParameters(HTTP_PROFILE_ID, pResp)) {

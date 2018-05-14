@@ -59,6 +59,8 @@
 
 #include "light_switch_example_common.h"
 
+#include "nrf_temp.h"
+
 /*****************************************************************************
  * Definitions
  *****************************************************************************/
@@ -75,6 +77,7 @@ static simple_on_off_server_t m_server;
 /* Forward declaration */
 static uint8_t get_cb(const simple_on_off_server_t * p_server);
 static bool set_cb(const simple_on_off_server_t * p_server, uint8_t value);
+static int32_t APP_ReadTemp(void);
 
 /*****************************************************************************
  * Static utility functions
@@ -105,8 +108,7 @@ static uint8_t get_cb(const simple_on_off_server_t * p_server)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got GET command\n");
     //return hal_led_pin_get(LED_PIN_NUMBER);
-    //TODO: Get temperature
-    return 30;
+    return (uint8_t) APP_ReadTemp();
 }
 
 static bool set_cb(const simple_on_off_server_t * p_server, uint8_t value)
@@ -115,6 +117,12 @@ static bool set_cb(const simple_on_off_server_t * p_server, uint8_t value)
     //hal_led_pin_set(LED_PIN_NUMBER, value);
     //return value;
 }
+
+int32_t APP_ReadTemp(void) {
+  int32_t temp;
+  sd_temp_get(&temp);
+  return temp / 4;
+};
 
 int main(void)
 {

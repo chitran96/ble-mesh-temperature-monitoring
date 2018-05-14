@@ -87,8 +87,20 @@
 /* My define */
 
 #define UBLOX_BAUDRATE (115200)
-#define GET_TEMP_PERIOD_S (20) // in seconds
+#define GET_TEMP_PERIOD_S (60) // in seconds
 #define MAX_RESP_BUFF (700)
+#define MAX_SERVER_ID_LENGTH (20)
+#define MAX_DATA_LENGTH (200)
+#define THINGSPEAK_API ("YRSGAFOJYKQX2R63")
+
+#define MOBILE_PWR_PIN (9)
+
+typedef struct
+{
+  bool isAlive;
+  char id[MAX_SERVER_ID_LENGTH];
+  uint8_t temp;
+} server_info_t;
 
 /*****************************************************************************
  * Static data
@@ -132,6 +144,8 @@ static volatile bool timerFlag = false;
 static volatile bool isGettingData = false;
 
 char buffer[MAX_RESP_BUFF];
+
+server_info_t m_server_info[SERVER_COUNT];
 
 /*****************************************************************************
  * Static functions
@@ -273,11 +287,11 @@ static void client_status_cb(const simple_on_off_client_t *p_self, uint8_t curTe
 
   if (curTemp == ERR_TEMP_CODE) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Error while updating new temperature from node %d\n", server_index);
-    hal_led_blink_ms(LEDS_MASK, 1000, 2);
+    //hal_led_blink_ms(LEDS_MASK, 1000, 2);
   } else {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Update temperature %d from node %d\n", curTemp, server_index);
-    hal_led_blink_ms(LEDS_MASK, 100, 6);
-    //TODO: Store in buffer
+    m_server_info[server_index].temp = curTemp;
+    //hal_led_blink_ms(LEDS_MASK, 100, 6);
   }
 }
 
@@ -301,7 +315,13 @@ static void client_get_status_handle() {
     status = simple_on_off_client_get(&m_clients[i]);
     if (status == NRF_ERROR_INVALID_STATE || status == NRF_ERROR_NO_MEM || status == NRF_ERROR_BUSY) {
       __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Cannot send. Device is busy.\n");
-      hal_led_blink_ms(LEDS_MASK, 50, 4);
+      m_server_info[i].isAlive = false;
+      //hal_led_blink_ms(LEDS_MASK, 50, 4);
+      //hal_led_blink_ms(bsp_board_led_idx_to_pin
+    }
+    else
+    {
+      m_server_info[i].isAlive = true;
     }
   }
 }
@@ -341,7 +361,7 @@ static void button_event_handler(uint32_t button_number) {
       status == NRF_ERROR_NO_MEM ||
       status == NRF_ERROR_BUSY) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Cannot send. Device is busy or offline.\n");
-    hal_led_blink_ms(LEDS_MASK, 50, 4);
+    //hal_led_blink_ms(LEDS_MASK, 50, 4);
   } else {
     ERROR_CHECK(status);
   }
@@ -431,7 +451,7 @@ void APP_StartTimer(app_timer_id_t timer, uint32_t period) {
 void APP_OnGatherTimeout(void *p_context) {
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "App timer event\n");
   timerFlag = true;
-  //client_get_status_handle();
+  client_get_status_handle();
 };
 
 void APP_OnSysTmr(void *p_context)
@@ -441,6 +461,16 @@ void APP_OnSysTmr(void *p_context)
 
 static bool APP_Init(void) {
   uint32_t res;
+
+  nrf_gpio_cfg_output(MOBILE_PWR_PIN);
+  nrf_gpio_pin_set(MOBILE_PWR_PIN);
+
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Test power off\n");
+  nrf_delay_ms(100);
+  nrf_gpio_pin_clear(MOBILE_PWR_PIN);
+  nrf_delay_ms(1100);
+  nrf_gpio_pin_set(MOBILE_PWR_PIN);
+  nrf_delay_ms(3000);
 
   res = app_timer_init();
   res = app_timer_create(&appGatherTimeout, APP_TIMER_MODE_REPEATED, APP_OnGatherTimeout);
@@ -487,12 +517,25 @@ static bool APP_Init(void) {
 };
 
 bool APP_HandleTimer(void) {
+  char data[MAX_DATA_LENGTH];
+  char tempStr[20];
+  uint8_t i;
+
   if (!ATMOBILE_TurnOnGPRSAndPDP(buffer)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Turn GPRS on failed resp %s\n", buffer);
     return false;
   }
-
-  if (!ATMOBILE_UploadData("22", buffer)) {
+  sprintf(data, "/update?api_key=%s", THINGSPEAK_API);
+  for (i = 0; i < SERVER_COUNT; i++)
+  {
+    if (m_server_info[i].isAlive)
+    {
+      sprintf(tempStr, "&field%d=%d", i, m_server_info[i].temp);
+      strcat(data, tempStr);
+    }
+  }
+  
+  if (!ATMOBILE_UploadData(data, buffer)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Upload data failed resp %s\n", buffer);
     return false;
   }
