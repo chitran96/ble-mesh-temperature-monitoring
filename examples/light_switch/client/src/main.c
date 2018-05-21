@@ -87,7 +87,7 @@
 /* My define */
 
 #define UBLOX_BAUDRATE (115200)
-#define GET_TEMP_PERIOD_S (60) // in seconds
+#define GET_TEMP_PERIOD_S (30) // in seconds
 #define MAX_RESP_BUFF (700)
 #define MAX_SERVER_ID_LENGTH (20)
 #define MAX_DATA_LENGTH (200)
@@ -288,19 +288,24 @@ static void client_status_cb(const simple_on_off_client_t *p_self, uint8_t curTe
   if (curTemp == ERR_TEMP_CODE) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Error while updating new temperature from node %d\n", server_index);
     //hal_led_blink_ms(LEDS_MASK, 1000, 2);
-  } else {
+  } else if (curTemp != 0) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Update temperature %d from node %d\n", curTemp, server_index);
     m_server_info[server_index].temp = curTemp;
+    m_server_info[server_index].isAlive = true;
     //hal_led_blink_ms(LEDS_MASK, 100, 6);
+  }
+  else 
+  {
+    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got resp from node %d\n", server_index);
   }
 }
 
 static void health_event_cb(const health_client_t *p_client, const health_client_evt_t *p_event) {
   switch (p_event->type) {
   case HEALTH_CLIENT_EVT_TYPE_CURRENT_STATUS_RECEIVED:
-    __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Node 0x%04x alive with %u active fault(s), RSSI: %d\n",
+    /*__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Node 0x%04x alive with %u active fault(s), RSSI: %d\n",
         p_event->p_meta_data->src.value, p_event->data.fault_status.fault_array_length,
-        p_event->p_meta_data->rssi);
+        p_event->p_meta_data->rssi);*/
     break;
   default:
     break;
@@ -311,22 +316,23 @@ static void client_get_status_handle() {
   uint8_t i = 0;
   uint32_t status = NRF_SUCCESS;
 
-  for (i; i < CLIENT_COUNT; i++) {
+  for (i; i < SERVER_COUNT; i++) {
     status = simple_on_off_client_get(&m_clients[i]);
     if (status == NRF_ERROR_INVALID_STATE || status == NRF_ERROR_NO_MEM || status == NRF_ERROR_BUSY) {
-      __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Cannot send. Device is busy.\n");
+      __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Cannot send. Device %d is busy.\n", i);
       m_server_info[i].isAlive = false;
       //hal_led_blink_ms(LEDS_MASK, 50, 4);
       //hal_led_blink_ms(bsp_board_led_idx_to_pin
     }
-    else
+    else if (status == NRF_SUCCESS)
     {
-      m_server_info[i].isAlive = true;
+      //m_server_info[i].isAlive = true;
     }
   }
 }
 
 static void button_event_handler(uint32_t button_number) {
+  static bool ledState = true;
   __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Button %u pressed\n", button_number);
   if (m_configured_devices == 0) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_WARN, "No devices provisioned\n");
@@ -350,8 +356,10 @@ static void button_event_handler(uint32_t button_number) {
     break;
   case 3:
     /* Group message: invert all LEDs. */
-    /*status = simple_on_off_client_set_unreliable(&m_clients[GROUP_CLIENT_INDEX],
-                                                         !hal_led_pin_get(BSP_LED_0 + button_number), 3);*/
+
+    status = simple_on_off_client_set_unreliable(&m_clients[GROUP_CLIENT_INDEX],
+                                                         ledState, 1);
+    ledState = !ledState;
     break;
   default:
     break;
@@ -461,16 +469,18 @@ void APP_OnSysTmr(void *p_context)
 
 static bool APP_Init(void) {
   uint32_t res;
+  uint8_t i;
 
   nrf_gpio_cfg_output(MOBILE_PWR_PIN);
   nrf_gpio_pin_set(MOBILE_PWR_PIN);
 
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Test power off\n");
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Reset SARA\n");
   nrf_delay_ms(100);
   nrf_gpio_pin_clear(MOBILE_PWR_PIN);
   nrf_delay_ms(1100);
   nrf_gpio_pin_set(MOBILE_PWR_PIN);
   nrf_delay_ms(3000);
+  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Done reset SARA\n");
 
   res = app_timer_init();
   res = app_timer_create(&appGatherTimeout, APP_TIMER_MODE_REPEATED, APP_OnGatherTimeout);
@@ -485,9 +495,9 @@ static bool APP_Init(void) {
   }
 
   APP_StartTimer(appSysTmr, 1);
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Test SYSTMR %d\n", SYSTMR_millis());
-  nrf_delay_ms(3000);
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Test SYSTMR %d\n", SYSTMR_millis());
+  //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Test SYSTMR %d\n", SYSTMR_millis());
+  //nrf_delay_ms(3000);
+  //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Test SYSTMR %d\n", SYSTMR_millis());
 
   if (!ATLOW_Reinit(UBLOX_BAUDRATE, true, buffer, MAX_RESP_BUFF)) {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Init UART failed\n");
@@ -513,6 +523,11 @@ static bool APP_Init(void) {
   nrf_delay_ms(50);
 
   //nrf_temp_init();
+
+  for (i = 0; i < SERVER_COUNT; i++)
+  {
+    m_server_info[i].isAlive = false;
+  }
   return true;
 };
 
@@ -528,9 +543,9 @@ bool APP_HandleTimer(void) {
   sprintf(data, "/update?api_key=%s", THINGSPEAK_API);
   for (i = 0; i < SERVER_COUNT; i++)
   {
-    if (m_server_info[i].isAlive)
+    if (m_server_info[i].isAlive == true)
     {
-      sprintf(tempStr, "&field%d=%d", i, m_server_info[i].temp);
+      sprintf(tempStr, "&field%d=%d", i+1, m_server_info[i].temp);
       strcat(data, tempStr);
     }
   }

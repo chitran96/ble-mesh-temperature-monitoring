@@ -85,7 +85,7 @@ bool ATMOBILE_MOBIReinit(char *pLastResp) {
     //DB_Puts("AT sync OK\n");
   }
 
-  __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "AT sync OK. Resp: %s\n", pLastResp);
+  //__LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "AT sync OK. Resp: %s\n", pLastResp);
 
   /* set ECHO off */
   if (!ATUBLOX_SetEcho(false, pLastResp)) {

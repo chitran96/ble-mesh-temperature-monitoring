@@ -114,7 +114,7 @@ static uint8_t get_cb(const simple_on_off_server_t * p_server)
 static bool set_cb(const simple_on_off_server_t * p_server, uint8_t value)
 {
     __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "Got SET command: value %d\n", value);
-    //hal_led_pin_set(LED_PIN_NUMBER, value);
+    hal_led_pin_set(LED_PIN_NUMBER, value);
     //return value;
 }
 
@@ -156,5 +156,6 @@ int main(void)
     while (true)
     {
         (void)sd_app_evt_wait();
+        __LOG(LOG_SRC_APP, LOG_LEVEL_INFO, "----- Test temp %d -------\n", APP_ReadTemp());
     }
 }

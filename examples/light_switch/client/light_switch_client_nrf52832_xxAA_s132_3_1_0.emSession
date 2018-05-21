@@ -26,6 +26,8 @@
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Application;lib"/>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;nRF Drivers"/>
   <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;nRF Libraries"/>
+  <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Provisioning"/>
+  <ProjectSessionItem path="light_switch_client_nrf52832_xxAA_s132_3.1.0;light_switch_client_nrf52832_xxAA_s132_3.1.0;Simple OnOff Model"/>
  </Project>
  <Register1>
   <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="light_switch_client_nrf52832_xxAA_s132_3.1.0" decimalNodes="" octalNodes="" unsignedNodes=""/>
@@ -58,9 +60,9 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="89" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="1" top="73" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="25" y="604" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="1" top="577" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="17" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_low_c.h" debugPath="../lib/at_low_c.h" selected="0" top="2" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="123" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_mobile_c.c" debugPath="../lib/at_mobile_c.c" selected="0" top="103" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="87" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_mobile_c.c" debugPath="../lib/at_mobile_c.c" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="188" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_low_c.c" debugPath="../lib/at_low_c.c" selected="0" top="171" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="98" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/at_ublox_c.c" debugPath="../lib/at_ublox_c.c" selected="0" top="82" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="42" useTextEdit="1" useBinaryEdit="0" left="0" path="../lib/systmr.c" debugPath="../lib/systmr.c" selected="0" top="19" codecName="Default"/>
@@ -68,6 +70,11 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="939" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/timer/app_timer.c" debugPath="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/timer/app_timer.c" selected="0" top="931" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="2079" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/util/sdk_config.h" debugPath="../../../external/nRF5_SDK_14.2.0_17b948a/components/libraries/util/sdk_config.h" selected="0" top="2063" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="2049" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../external/nRF5_SDK_14.2.0_17b948a/components/device/nrf52.h" debugPath="../../../external/nRF5_SDK_14.2.0_17b948a/components/device/nrf52.h" selected="0" top="2033" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="231" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../external/nRF5_SDK_14.2.0_17b948a/components/boards/boards.h" debugPath="../../../external/nRF5_SDK_14.2.0_17b948a/components/boards/boards.h" selected="0" top="215" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="181" useTextEdit="1" useBinaryEdit="0" left="0" path="src/provisioner.c" debugPath="src/provisioner.c" selected="0" top="165" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="62" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../models/simple_on_off/include/simple_on_off_client.h" debugPath="../../../models/simple_on_off/include/simple_on_off_client.h" selected="0" top="54" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="55" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../models/simple_on_off/include/simple_on_off_common.h" debugPath="../../../models/simple_on_off/include/simple_on_off_common.h" selected="0" top="39" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="200" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../models/simple_on_off/src/simple_on_off_client.c" debugPath="../../../models/simple_on_off/src/simple_on_off_client.c" selected="0" top="185" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="light_switch_client_nrf52832_xxAA_s132_3.1.0" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/DELL/Desktop/ble-mesh-temperature-monitoring/examples/light_switch/lib" debugSearchPath="" autoConnectCapabilities="3711"/>
 </session>
