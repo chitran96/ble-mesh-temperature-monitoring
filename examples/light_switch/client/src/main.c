@@ -358,7 +358,7 @@ static void button_event_handler(uint32_t button_number) {
     /* Group message: invert all LEDs. */
 
     status = simple_on_off_client_set_unreliable(&m_clients[GROUP_CLIENT_INDEX],
-                                                         ledState, 1);
+                                                         ledState, 3);
     ledState = !ledState;
     break;
   default:

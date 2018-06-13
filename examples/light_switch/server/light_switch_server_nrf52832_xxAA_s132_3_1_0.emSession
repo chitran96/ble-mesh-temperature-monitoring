@@ -23,6 +23,7 @@
   <ProjectSessionItem path="light_switch_server_nrf52832_xxAA_s132_3.1.0;light_switch_server_nrf52832_xxAA_s132_3.1.0"/>
   <ProjectSessionItem path="light_switch_server_nrf52832_xxAA_s132_3.1.0;light_switch_server_nrf52832_xxAA_s132_3.1.0;Access"/>
   <ProjectSessionItem path="light_switch_server_nrf52832_xxAA_s132_3.1.0;light_switch_server_nrf52832_xxAA_s132_3.1.0;Application"/>
+  <ProjectSessionItem path="light_switch_server_nrf52832_xxAA_s132_3.1.0;light_switch_server_nrf52832_xxAA_s132_3.1.0;Provisioning"/>
   <ProjectSessionItem path="light_switch_server_nrf52832_xxAA_s132_3.1.0;light_switch_server_nrf52832_xxAA_s132_3.1.0;Simple OnOff Model"/>
  </Project>
  <Register1>
@@ -53,9 +54,9 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="29" y="137" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="1" top="130" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="122" useTextEdit="1" useBinaryEdit="0" left="0" path="src/main.c" debugPath="src/main.c" selected="1" top="97" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="119" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../models/simple_on_off/src/simple_on_off_server.c" debugPath="../../../models/simple_on_off/src/simple_on_off_server.c" selected="0" top="103" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="76" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../models/simple_on_off/include/simple_on_off_server.h" debugPath="../../../models/simple_on_off/include/simple_on_off_server.h" selected="0" top="60" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="98" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../models/simple_on_off/include/simple_on_off_server.h" debugPath="../../../models/simple_on_off/include/simple_on_off_server.h" selected="0" top="82" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="light_switch_server_nrf52832_xxAA_s132_3.1.0" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="light_switch_server_nrf52832_xxAA_s132_3.1.0" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" debugSearchFileMap="" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>
