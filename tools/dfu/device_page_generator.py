@@ -173,8 +173,8 @@ def write_specific_page(platforms, softdevices, args):
     device_page = DevicePage(platform, softdevice, bootloader_config)
     if not args.output_file:
         args.output_file = "_".join(["device_page",
-                                     self.platform["name"],
-                                     self.softdevice["name"]]) + ".hex"
+                                     platform["name"],
+                                     softdevice["name"]]) + ".hex"
 
     device_page.write_hex(args.output_file)
 
